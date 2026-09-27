@@ -182,6 +182,15 @@ export function MapView({ geo, entries, summaries, selectedCountry, focus, onSel
         filter: ['==', ['get', 'id'], ''],
         paint: { 'line-color': C.ink, 'line-width': 3 },
       })
+      // Borde ink bajo la línea: solo en modo raspar, donde la línea es amarilla.
+      map.addLayer({
+        id: 'route-casing',
+        type: 'line',
+        source: 'route',
+        filter: ['in', ['geometry-type'], ['literal', ['LineString', 'MultiLineString']]],
+        layout: { 'line-join': 'miter', 'line-cap': 'butt', visibility: 'none' },
+        paint: { 'line-color': C.ink, 'line-width': 5 },
+      })
       map.addLayer({
         id: 'route-line',
         type: 'line',
@@ -373,6 +382,12 @@ export function MapView({ geo, entries, summaries, selectedCountry, focus, onSel
         : ['match', ['get', 'status'], 'lived', C.ink, 'visited', C.faro, C.white],
     )
     map.setPaintProperty('country-fill', 'fill-opacity', scratch ? 1 : ['case', ['boolean', ['get', 'partial'], false], 0.45, 1])
+    // Sobre la lámina ink, las fronteras y las líneas de viaje en ink desaparecen: se aclaran en este modo.
+    const beenExpr: maplibregl.ExpressionSpecification = ['in', ['get', 'status'], ['literal', ['lived', 'visited']]]
+    map.setPaintProperty('country-line', 'line-color', scratch ? ['case', beenExpr, C.ink, C.smoke] : C.ink)
+    map.setPaintProperty('region-line', 'line-color', scratch ? ['case', ['==', ['get', 'visited'], true], C.ink, C.smoke] : C.ink)
+    map.setPaintProperty('route-line', 'line-color', scratch ? C.faro : C.ink)
+    map.setLayoutProperty('route-casing', 'visibility', scratch ? 'visible' : 'none')
     writePref('scratch', scratch)
   }, [ready, scratch])
 
