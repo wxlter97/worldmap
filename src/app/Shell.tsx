@@ -1,5 +1,6 @@
 import { NavLink, Outlet } from 'react-router-dom'
 import { AchievementToaster } from '../components/Achievements'
+import { StatusBar } from '../components/StatusBar'
 import { Symbol } from '../components/ui'
 import { useAchievements } from '../lib/achievements'
 import { useAppData } from './AppData'
@@ -7,7 +8,7 @@ import './Shell.css'
 
 /** shareName definido = vista compartida de solo lectura. */
 export function Shell({ shareName }: { shareName?: string }) {
-  const { basePath, geo, entries, loading, trips, sharedTripId } = useAppData()
+  const { basePath, geo, entries, loading, trips, sharedTripId, pendingWrites } = useAppData()
   const sharedTrip = sharedTripId ? trips.find((t) => t.id === sharedTripId) : null
   const achievements = useAchievements(geo, entries)
   const home = basePath || '/'
@@ -42,6 +43,7 @@ export function Shell({ shareName }: { shareName?: string }) {
         <Outlet />
       </main>
       {!shared && !loading && <AchievementToaster achievements={achievements} />}
+      <StatusBar pendingWrites={!shared && pendingWrites} />
     </div>
   )
 }

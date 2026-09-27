@@ -23,7 +23,7 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'prompt', // la app avisa y el usuario decide cuándo recargar
       includeAssets: ['favicon.svg', 'icons/*.png'],
       manifest: {
         name: 'Mapa · wxlter.',

@@ -37,6 +37,7 @@ export interface UserData {
   trips: Trip[]
   loading: boolean
   error: string | null
+  pendingWrites: boolean // cambios guardados en el dispositivo que aún no llegan al servidor
 }
 
 /**
@@ -45,22 +46,24 @@ export interface UserData {
  * - Link de un viaje (`tripId`): solo las entradas y el viaje compartido.
  */
 export function useUserData(uid: string | null, tripId: string | null = null): UserData {
-  const [state, setState] = useState<UserData>({ entries: [], trips: [], loading: true, error: null })
+  const [state, setState] = useState<UserData>({ entries: [], trips: [], loading: true, error: null, pendingWrites: false })
   const [rawEntries, setRawEntries] = useState<Entry[]>([])
   const [notes, setNotes] = useState<Map<string, Note>>(new Map())
 
   useEffect(() => {
     if (!uid) {
-      setState({ entries: [], trips: [], loading: false, error: null })
+      setState({ entries: [], trips: [], loading: false, error: null, pendingWrites: false })
       return
     }
     const onError = (e: Error) => setState((s) => ({ ...s, loading: false, error: e.message }))
     const entriesQuery = tripId ? query(entriesCol(uid), where('tripIds', 'array-contains', tripId)) : entriesCol(uid)
     const unsubEntries = onSnapshot(
       entriesQuery,
+      { includeMetadataChanges: true },
       (snap) => {
-        setRawEntries(snap.docs.map((d) => d.data() as Entry))
-        setState((s) => ({ ...s, loading: false }))
+        // Los cambios solo de metadatos (p. ej. «ya sincronizado») no re-renderizan la lista.
+        if (snap.docChanges().length) setRawEntries(snap.docs.map((d) => d.data() as Entry))
+        setState((s) => ({ ...s, loading: false, pendingWrites: snap.metadata.hasPendingWrites }))
       },
       onError,
     )
