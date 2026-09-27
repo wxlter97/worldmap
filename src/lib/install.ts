@@ -37,8 +37,10 @@ export function isStandalone(): boolean {
 /** iOS/iPadOS Safari: sin evento de instalación, se instala con Compartir → «Agregar a inicio». */
 export function isIosSafari(): boolean {
   const ua = navigator.userAgent
+  // Android/Chrome también dicen «Safari» en su agente de usuario: se descartan explícitamente.
+  if (/Android|Chrome|Chromium|CriOS|FxiOS|EdgiOS|Edg\//.test(ua)) return false
   const ios = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
-  return ios && /Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS/.test(ua)
+  return ios && /Safari/.test(ua)
 }
 
 /** Safari de macOS: se instala desde Archivo → «Agregar al Dock». */

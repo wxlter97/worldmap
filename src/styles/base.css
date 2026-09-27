@@ -393,3 +393,13 @@ a {
   --symbol-fg: #ffdb00;
   --wordmark-dot: #111111;
 }
+
+/* iOS hace zoom en toda la página al enfocar un campo con letra de menos de 16px. En pantallas táctiles
+   todos los campos de texto van a 16px (sin bloquear el zoom del usuario en el viewport). */
+@media (pointer: coarse) {
+  input:not([type='range'], [type='checkbox'], [type='radio'], [type='file']),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
