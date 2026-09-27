@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!-- Android (íconos temáticos) usa solo el canal alfa: la M sobre transparente, dentro de la zona segura. -->
+  <polygon fill="#FFFFFF" transform="translate(512 512) scale(0.72) translate(-512 -512)" points="212,774 212,250 400,250 512,470 624,250 812,250 812,774 660,774 660,480 560,680 464,680 364,480 364,774"/>
+</svg>

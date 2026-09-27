@@ -2,6 +2,7 @@ import { StrictMode, useEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Link, Navigate, Route, Routes, useParams } from 'react-router-dom'
 import { t, useLang } from './lib/i18n'
+import './lib/install' // captura beforeinstallprompt lo antes posible
 import './styles/tokens.css'
 import './styles/base.css'
 import { AppDataProvider } from './app/AppData'
@@ -18,6 +19,7 @@ import { MapPage } from './pages/MapPage'
 import { PrivacyPage } from './pages/PrivacyPage'
 import { StatsPage } from './pages/StatsPage'
 import { TripsPage } from './pages/TripsPage'
+import { InstallPrompt } from './components/InstallPrompt'
 
 /** Rutas comunes a la app privada y a la vista compartida. */
 function DataRoutes({ shareName }: { shareName?: string }) {
@@ -75,7 +77,12 @@ function SharedApp() {
 function App() {
   // Cambiar de idioma vuelve a montar la app con los textos nuevos.
   const lang = useLang()
-  return <AppRoutes key={lang} />
+  return (
+    <>
+      <AppRoutes key={lang} />
+      <InstallPrompt key={`install-${lang}`} />
+    </>
+  )
 }
 
 function AppRoutes() {

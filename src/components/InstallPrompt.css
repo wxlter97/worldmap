@@ -1,0 +1,98 @@
+.install {
+  position: fixed;
+  z-index: 45;
+  left: 50%;
+  bottom: var(--sp-4);
+  transform: translateX(-50%);
+  width: min(560px, calc(100vw - 32px));
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: 12px;
+  border: 2px solid var(--brand-faro);
+  background: var(--ink-fixed);
+  color: var(--on-ink);
+}
+
+.install__icon {
+  flex-shrink: 0;
+  display: block;
+}
+
+.install__text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.install__text strong {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 20px;
+  letter-spacing: -0.02em;
+  color: var(--brand-faro);
+}
+
+.install__text span {
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.install__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.install button {
+  min-height: 36px;
+  padding: 6px 14px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.install__primary {
+  border: 2px solid var(--brand-faro);
+  background: var(--brand-faro);
+  color: var(--on-faro);
+}
+
+.install__primary:hover {
+  background: var(--on-ink);
+  border-color: var(--on-ink);
+}
+
+.install__secondary {
+  border: 2px solid var(--ink-soft-fixed);
+  background: none;
+  color: var(--on-ink);
+}
+
+.install__secondary:hover {
+  border-color: var(--on-ink);
+}
+
+.install :focus-visible {
+  outline: 3px solid var(--brand-faro);
+  outline-offset: 2px;
+}
+
+@media (max-width: 520px) {
+  .install {
+    flex-wrap: wrap;
+  }
+
+  .install__actions {
+    flex-direction: row;
+    width: 100%;
+  }
+
+  .install__actions button {
+    flex: 1;
+  }
+}

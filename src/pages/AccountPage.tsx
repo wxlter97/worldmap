@@ -8,6 +8,7 @@ import { auth } from '../lib/firebase'
 import { getThemePref, setThemePref, type ThemePref } from '../lib/theme'
 import { getLang, setLang, t, type Lang } from '../lib/i18n'
 import './AccountPage.css'
+import { InstallSection } from '../components/InstallPrompt'
 
 export function AccountPage() {
   const { uid, profile, trips } = useAppData()
@@ -186,6 +187,8 @@ export function AccountPage() {
           ))}
         </div>
       </section>
+
+      <InstallSection />
 
       <EmailVerification />
       <ChangePassword />
