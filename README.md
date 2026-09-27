@@ -2,8 +2,9 @@
 
 PWA para registrar países, territorios, regiones, ciudades y lugares visitados. Producción: `map.wxlter.dev`.
 
-Stack: Vite + React + TypeScript · MapLibre GL · Firebase (Auth, Firestore offline, Storage) · Vercel.
-Diseño: design system wxlter (`design_handoff_marca_wxlter`), tokens en `src/styles/tokens.css`.
+Stack: Vite + React + TypeScript · MapLibre GL · Firebase (Auth, Firestore offline, Storage) · Vercel (estático + 2 funciones).
+Diseño: design system wxlter (`design_handoff_marca_wxlter`), tokens en `src/styles/tokens.css` (tema claro/oscuro).
+Idiomas: español (fuente) e inglés — `t('texto en español')` en `src/lib/i18n.ts`, diccionario en `src/lib/i18n-en.ts`.
 
 ## Requisitos
 
@@ -24,6 +25,14 @@ Los datos del emulador se guardan en `.emulator-data/` al cerrar. Crea una cuent
 pantalla de login: solo existe en el emulador. Para tener un historial de ejemplo (Europa, Japón, EE. UU.,
 México, Perú…) en esa cuenta: `node scripts/seed-emulator.mjs`.
 
+## Pruebas
+
+```bash
+npm test             # lógica: fechas, % por país, líneas de viaje, logros, copias de seguridad
+npm run test:rules   # reglas de Firestore y Storage contra un emulador aislado (proyecto demo-rules)
+npx tsx scripts/og-preview.mts <token>   # tarjeta de vista previa de un link, contra el emulador
+```
+
 ## Datos geográficos
 
 `public/data/` se genera y se versiona. Para regenerarlo:
@@ -43,7 +52,9 @@ npm run build:data   # simplifica y escribe public/data/
 
 ## Reglas del modelo
 
-- Una entrada por lugar en `users/{uid}/entries/{tipo:id}` con estado, fechas (varias), markdown, etiquetas, valoración, personas y 1 foto.
+- Una entrada por lugar en `users/{uid}/entries/{tipo:id}` con estado, fechas (varias), etiquetas, valoración, hasta 12 fotos
+  (`photos[]`; `photoPath` = portada) y `tripIds` derivado de las fechas. La descripción y las personas van aparte en
+  `users/{uid}/notes/{tipo:id}` para que los links puedan ocultarlas.
 - Una ciudad, región o lugar con estado implica ese estado en su país.
 - **Vivido** y **Visitado** cuentan para estadísticas; **Escala**, **Planeado** y **Quiero ir** no.
 - % del país = área de las regiones visitadas / área total, salvo override manual en la entrada del país.
@@ -60,28 +71,34 @@ npm run build:data   # simplifica y escribe public/data/
 - **Quiero ir** (Viajes → Quiero ir, y en el panel de cada lugar): «Combínalo con» sugiere sitios UNESCO y ciudades
   a 40–250 km (o lo más destacado del país) y vecinos no visitados; «Ideas» propone países que limitan con lo visitado,
   los que faltan para logros regionales (más cercanos primero) y maravillas pendientes. «+» añade a Quiero ir.
-- **Links de solo lectura**: `shares/{token}` → `{ uid, displayName }`. Con `users/{uid}.sharing.enabled = true` las reglas
-  permiten leer el perfil, entradas, viajes y fotos de ese usuario sin sesión. Regenerar el link invalida el anterior;
-  desactivarlo corta toda lectura pública. El perfil público no debe contener datos privados (no se guarda el correo).
+- **Links de solo lectura**: `shares/{token}` → `{ uid, displayName, tripId? }`.
+  - Mapa completo: con `users/{uid}.sharing.enabled = true` se leen perfil, entradas, viajes y fotos sin sesión.
+  - Un viaje: `users/{uid}.sharedTrips` lista los viajes compartidos; solo se leen las entradas cuyo `tripIds` los incluye.
+  - Notas (`notes/`) solo con `sharing.showNotes = true`. Nunca se guarda el correo en el perfil (es público con link activo).
+  - Regenerar invalida el link anterior; desactivar corta toda lectura pública.
+  - `/s/{token}` pasa por `api/share-page.ts`, que añade etiquetas Open Graph; `api/og.ts` genera la imagen (satori + resvg).
+- **Marcado rápido**: tocar países en el mapa o marcarlos en una lista; nunca borra entradas con fechas, notas o fotos.
+- **Cuenta**: verificar correo, cambiar contraseña, eliminar la cuenta con todos sus datos y fotos, tema e idioma.
 
 ## Configurar Firebase (una vez)
 
 1. Crear el proyecto en la consola de Firebase.
 2. **Authentication → Método de acceso → Correo electrónico/contraseña**: activar.
-3. **Firestore Database → Crear base de datos** (modo producción; región cercana, p. ej. `us-east1`).
+3. **Firestore Database → Crear base de datos** (modo producción; `nam5`).
 4. **Storage → Comenzar** (requiere plan Blaze).
-5. **Configuración del proyecto → Tus apps → Web**: registrar la app y copiar el `firebaseConfig` a `.env.local` (con `VITE_USE_EMULATORS=false`).
+5. **Configuración del proyecto → Tus apps → Web**: registrar la app. Su config pública está en `.env.production`
+   (proyecto `map-wxlter-dev`); el build de producción la usa automáticamente.
 6. **Authentication → Configuración → Dominios autorizados**: añadir `map.wxlter.dev`.
 7. Desplegar reglas:
 
 ```bash
 npx firebase login
-npx firebase use --add        # elegir el proyecto
-npx firebase deploy --only firestore:rules,storage
+npx firebase deploy --only firestore:rules,storage --project map-wxlter-dev
 ```
 
 ## Desplegar en Vercel
 
-1. Importar el repo en Vercel (framework: Vite, build `npm run build`, output `dist`).
-2. Variables de entorno: las `VITE_FIREBASE_*` de `.env.example`, y `VITE_USE_EMULATORS=false`.
+1. Importar el repo en Vercel (framework: Vite, build `npm run build`, output `dist`, Node 24).
+   No hacen falta variables de entorno: la config pública de Firebase está en `.env.production`.
+2. `vercel.json` define las reescrituras (`/s/*` → `api/share-page`) y las funciones (`api/og.ts`, `api/share-page.ts`).
 3. Dominio: añadir `map.wxlter.dev` y crear el `CNAME` que indique Vercel en el DNS de `wxlter.dev`.
