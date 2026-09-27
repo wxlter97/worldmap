@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useAppData } from '../app/AppData'
+import { Timeline } from '../components/Timeline'
 import { Stars } from '../components/ui'
 import { CONTINENTS, type ContinentId } from '../lib/geo'
 import { PLACE_TYPE_LABEL, STATUSES, STATUS_LABEL, flagEmoji, formatRange, type PlaceType, type Status } from '../lib/model'
@@ -19,6 +20,8 @@ export function ListPage() {
   const [year, setYear] = useState('')
   const [tag, setTag] = useState('')
   const [sort, setSort] = useState<Sort>('recent')
+  const [params, setParams] = useSearchParams()
+  const view = params.get('vista') === 'tiempo' ? 'tiempo' : 'lista'
 
   const years = useMemo(
     () => [...new Set(entries.flatMap((e) => e.dates.flatMap((d) => [d.start.slice(0, 4), d.end.slice(0, 4)])))].sort().reverse(),
@@ -52,87 +55,99 @@ export function ListPage() {
         <span className="label muted">{results.length} de {entries.length}</span>
       </div>
 
-      <div className="list-page__filters">
-        <label className="field list-page__q">
-          <span>Buscar</span>
-          <input type="search" value={query} placeholder="Nombre, descripción, etiqueta, persona…" onChange={(e) => setQuery(e.target.value)} />
-        </label>
-        <label className="field">
-          <span>Estado</span>
-          <select value={status} onChange={(e) => setStatus(e.target.value as Status | '')}>
-            <option value="">Todos</option>
-            {STATUSES.map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
-          </select>
-        </label>
-        <label className="field">
-          <span>Tipo</span>
-          <select value={type} onChange={(e) => setType(e.target.value as PlaceType | '')}>
-            <option value="">Todos</option>
-            {(Object.keys(PLACE_TYPE_LABEL) as PlaceType[]).map((t) => <option key={t} value={t}>{PLACE_TYPE_LABEL[t]}</option>)}
-          </select>
-        </label>
-        <label className="field">
-          <span>Continente</span>
-          <select value={continent} onChange={(e) => setContinent(e.target.value as ContinentId | '')}>
-            <option value="">Todos</option>
-            {(Object.keys(CONTINENTS) as ContinentId[]).map((c) => <option key={c} value={c}>{CONTINENTS[c]}</option>)}
-          </select>
-        </label>
-        <label className="field">
-          <span>Año</span>
-          <select value={year} onChange={(e) => setYear(e.target.value)}>
-            <option value="">Todos</option>
-            {years.map((y) => <option key={y} value={y}>{y}</option>)}
-          </select>
-        </label>
-        {tags.length > 0 && (
-          <label className="field">
-            <span>Etiqueta</span>
-            <select value={tag} onChange={(e) => setTag(e.target.value)}>
-              <option value="">Todas</option>
-              {tags.map((t) => <option key={t} value={t}>#{t}</option>)}
-            </select>
-          </label>
-        )}
-        <label className="field">
-          <span>Orden</span>
-          <select value={sort} onChange={(e) => setSort(e.target.value as Sort)}>
-            <option value="recent">Editado recientemente</option>
-            <option value="date">Fecha de visita</option>
-            <option value="name">Nombre</option>
-            <option value="rating">Valoración</option>
-          </select>
-        </label>
+      <div className="tabs" role="tablist">
+        <button type="button" role="tab" aria-selected={view === 'lista'} onClick={() => setParams({})}>Lista</button>
+        <button type="button" role="tab" aria-selected={view === 'tiempo'} onClick={() => setParams({ vista: 'tiempo' })}>Línea de tiempo</button>
       </div>
 
-      {entries.length === 0 ? (
-        <p className="notice">Todavía no hay lugares. Ve al <Link to={basePath || '/'}>mapa</Link> y busca el primero.</p>
-      ) : results.length === 0 ? (
-        <p className="notice">Ningún lugar coincide con los filtros. Quita alguno para ver más.</p>
+      {view === 'tiempo' ? (
+        <Timeline />
       ) : (
-        <ul className="list-page__list">
-          {results.map((e) => {
-            const country = geo.countries[e.countryId]
-            return (
-              <li key={e.key}>
-                <Link to={mapLink(basePath, `p=${encodeURIComponent(e.key)}`)} className="list-card">
-                  <span className="list-card__flag" aria-hidden="true">{flagEmoji(country?.iso2 ?? null)}</span>
-                  <span className="list-card__main">
-                    <strong>{e.name}</strong>
-                    <span className="mono muted">
-                      {PLACE_TYPE_LABEL[e.type]}
-                      {e.type !== 'country' && country && ` · ${country.name}`}
-                      {e.dates[0] && ` · ${formatRange(e.dates[0])}`}
-                      {e.dates.length > 1 && ` (+${e.dates.length - 1})`}
-                    </span>
-                  </span>
-                  <Stars value={e.rating} />
-                  <span className={e.status === 'lived' || e.status === 'visited' ? 'badge badge--faro' : 'badge'}>{STATUS_LABEL[e.status]}</span>
-                </Link>
-              </li>
-            )
-          })}
-        </ul>
+        <>
+
+          <div className="list-page__filters">
+            <label className="field list-page__q">
+              <span>Buscar</span>
+              <input type="search" value={query} placeholder="Nombre, descripción, etiqueta, persona…" onChange={(e) => setQuery(e.target.value)} />
+            </label>
+            <label className="field">
+              <span>Estado</span>
+              <select value={status} onChange={(e) => setStatus(e.target.value as Status | '')}>
+                <option value="">Todos</option>
+                {STATUSES.map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
+              </select>
+            </label>
+            <label className="field">
+              <span>Tipo</span>
+              <select value={type} onChange={(e) => setType(e.target.value as PlaceType | '')}>
+                <option value="">Todos</option>
+                {(Object.keys(PLACE_TYPE_LABEL) as PlaceType[]).map((t) => <option key={t} value={t}>{PLACE_TYPE_LABEL[t]}</option>)}
+              </select>
+            </label>
+            <label className="field">
+              <span>Continente</span>
+              <select value={continent} onChange={(e) => setContinent(e.target.value as ContinentId | '')}>
+                <option value="">Todos</option>
+                {(Object.keys(CONTINENTS) as ContinentId[]).map((c) => <option key={c} value={c}>{CONTINENTS[c]}</option>)}
+              </select>
+            </label>
+            <label className="field">
+              <span>Año</span>
+              <select value={year} onChange={(e) => setYear(e.target.value)}>
+                <option value="">Todos</option>
+                {years.map((y) => <option key={y} value={y}>{y}</option>)}
+              </select>
+            </label>
+            {tags.length > 0 && (
+              <label className="field">
+                <span>Etiqueta</span>
+                <select value={tag} onChange={(e) => setTag(e.target.value)}>
+                  <option value="">Todas</option>
+                  {tags.map((t) => <option key={t} value={t}>#{t}</option>)}
+                </select>
+              </label>
+            )}
+            <label className="field">
+              <span>Orden</span>
+              <select value={sort} onChange={(e) => setSort(e.target.value as Sort)}>
+                <option value="recent">Editado recientemente</option>
+                <option value="date">Fecha de visita</option>
+                <option value="name">Nombre</option>
+                <option value="rating">Valoración</option>
+              </select>
+            </label>
+          </div>
+
+          {entries.length === 0 ? (
+            <p className="notice">Todavía no hay lugares. Ve al <Link to={basePath || '/'}>mapa</Link> y busca el primero.</p>
+          ) : results.length === 0 ? (
+            <p className="notice">Ningún lugar coincide con los filtros. Quita alguno para ver más.</p>
+          ) : (
+            <ul className="list-page__list">
+              {results.map((e) => {
+                const country = geo.countries[e.countryId]
+                return (
+                  <li key={e.key}>
+                    <Link to={mapLink(basePath, `p=${encodeURIComponent(e.key)}`)} className="list-card">
+                      <span className="list-card__flag" aria-hidden="true">{flagEmoji(country?.iso2 ?? null)}</span>
+                      <span className="list-card__main">
+                        <strong>{e.name}</strong>
+                        <span className="mono muted">
+                          {PLACE_TYPE_LABEL[e.type]}
+                          {e.type !== 'country' && country && ` · ${country.name}`}
+                          {e.dates[0] && ` · ${formatRange(e.dates[0])}`}
+                          {e.dates.length > 1 && ` (+${e.dates.length - 1})`}
+                        </span>
+                      </span>
+                      <Stars value={e.rating} />
+                      <span className={e.status === 'lived' || e.status === 'visited' ? 'badge badge--faro' : 'badge'}>{STATUS_LABEL[e.status]}</span>
+                    </Link>
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+        </>
       )}
     </div>
   )

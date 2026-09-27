@@ -1,0 +1,132 @@
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-12);
+}
+
+.tl-year__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  padding-bottom: var(--sp-2);
+  margin-bottom: var(--sp-4);
+  border-bottom: var(--border-section);
+}
+
+.tl-year h2 {
+  font-size: clamp(40px, 7vw, 72px);
+  line-height: 0.9;
+  letter-spacing: -0.04em;
+}
+
+.tl-year--upcoming h2 {
+  font-size: clamp(28px, 4vw, 40px);
+  padding-bottom: var(--sp-2);
+  margin-bottom: var(--sp-4);
+  border-bottom: var(--border-section);
+}
+
+.tl-year__head .mono {
+  font-size: 12px;
+}
+
+.tl-month {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: var(--sp-4);
+  padding: var(--sp-3) 0;
+}
+
+.tl-month + .tl-month {
+  border-top: 2px solid var(--disabled-bg);
+}
+
+.tl-month h3 {
+  padding-top: 12px;
+}
+
+.tl-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.tl-item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: 10px 12px;
+  border: var(--border);
+  background: var(--white);
+  text-decoration: none;
+  min-height: var(--touch);
+}
+
+.tl-item:hover {
+  background: var(--brand-faro);
+}
+
+.tl-item__date {
+  width: 200px;
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.tl-item__main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.tl-item__main strong {
+  font-weight: 700;
+}
+
+.tl-item__main .mono {
+  font-size: 11px;
+}
+
+.tl-item:hover .muted {
+  color: var(--ink-soft);
+}
+
+.tl-item__photo {
+  width: 56px;
+  flex-shrink: 0;
+}
+
+.tl-item__photo .thumb {
+  border-width: 2px;
+}
+
+.tl-undated {
+  font-size: 12px;
+}
+
+@media (max-width: 700px) {
+  .tl-month {
+    grid-template-columns: 1fr;
+    gap: var(--sp-2);
+  }
+
+  .tl-month h3 {
+    padding-top: 0;
+  }
+
+  .tl-item {
+    flex-wrap: wrap;
+  }
+
+  .tl-item__date {
+    width: 100%;
+  }
+}
