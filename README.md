@@ -57,6 +57,9 @@ npm run build:data   # simplifica y escribe public/data/
   parciales, solo sus regiones visitadas. Preferencia por dispositivo (localStorage).
 - **Exportar** (`/exportar`): póster PNG dibujado en canvas con proyección Equal Earth (4 formatos, 4 estilos, líneas
   opcionales), CSV (una fila por visita, UTF-8 con BOM) y copia JSON que se puede restaurar (sobrescribe por clave).
+- **Quiero ir** (Viajes → Quiero ir, y en el panel de cada lugar): «Combínalo con» sugiere sitios UNESCO y ciudades
+  a 40–250 km (o lo más destacado del país) y vecinos no visitados; «Ideas» propone países que limitan con lo visitado,
+  los que faltan para logros regionales (más cercanos primero) y maravillas pendientes. «+» añade a Quiero ir.
 - **Links de solo lectura**: `shares/{token}` → `{ uid, displayName }`. Con `users/{uid}.sharing.enabled = true` las reglas
   permiten leer el perfil, entradas, viajes y fotos de ese usuario sin sesión. Regenerar el link invalida el anterior;
   desactivarlo corta toda lectura pública. El perfil público no debe contener datos privados (no se guarda el correo).

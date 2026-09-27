@@ -58,6 +58,7 @@ for (const line of fs.readFileSync(path.join(RAW, 'countryInfo.txt'), 'utf8').sp
   info[c[1]] = {
     iso2: c[0], capital: c[5], areaKm2: Number(c[6]) || null, population: Number(c[7]) || null,
     tld: c[9], currencyCode: c[10], currencyName: c[11], phone: c[12], languages: c[15],
+    neighbours: c[17] ? c[17].split(',') : [],
   }
 }
 
@@ -97,6 +98,11 @@ for (const f of ne0.features) {
     areaKm2: gi.areaKm2 ?? Math.round(area(f) / 1e6),
     center: [p.LABEL_X, p.LABEL_Y],
   }
+}
+// Vecinos por frontera terrestre (GeoNames usa ISO2).
+const iso2ToIdAll = Object.fromEntries(Object.values(countries).filter((c) => c.iso2).map((c) => [c.iso2, c.id]))
+for (const c of Object.values(countries)) {
+  c.neighbours = (info[c.id]?.neighbours ?? []).map((iso2) => iso2ToIdAll[iso2]).filter((id) => id && id !== c.id)
 }
 const missing = [...UN_MEMBERS].filter((id) => !countries[id])
 if (missing.length) throw new Error(`Faltan miembros ONU en Natural Earth: ${missing.join(', ')}`)

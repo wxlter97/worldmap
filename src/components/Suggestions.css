@@ -1,0 +1,74 @@
+.sugg {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--sp-2);
+}
+
+.sugg__item {
+  display: flex;
+  border: var(--border);
+  background: var(--white);
+  min-width: 0;
+}
+
+.sugg__link {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 8px 10px;
+  text-decoration: none;
+  min-height: var(--touch);
+}
+
+.sugg__link:hover {
+  background: var(--brand-faro);
+}
+
+.sugg__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.sugg__text strong {
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sugg__text .mono {
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--smoke);
+}
+
+.sugg__link:hover .mono {
+  color: var(--ink-soft);
+}
+
+.sugg__add {
+  width: var(--touch);
+  flex-shrink: 0;
+  border: 0;
+  border-left: var(--border);
+  background: var(--white);
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.sugg__add:hover {
+  background: var(--ink);
+  color: var(--brand-faro);
+}
+
+.sugg-empty {
+  font-size: 12px;
+}

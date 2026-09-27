@@ -13,13 +13,14 @@ import { readPref, writePref } from '../lib/prefs'
 import { buildJourney, journeyArcs } from '../lib/journey'
 import { BEEN_STATUSES, summarizeCountries, type Entry } from '../lib/model'
 import type { Place } from '../lib/search'
+import { useGazetteer, type Gazetteer } from '../lib/suggestions'
 import { summarizeTrip } from '../lib/trips'
 import './MapPage.css'
 
 const zoomFor = (p: Place) => (p.type === 'country' ? 4 : p.type === 'region' ? 5.5 : 7)
 
 export function MapPage() {
-  const { geo, entries, trips, summaries, uid, readOnly } = useAppData()
+  const { geo, entries, trips, summaries, uid, readOnly, basePath } = useAppData()
   const [params, setParams] = useSearchParams()
   const [focus, setFocus] = useState<{ lon: number; lat: number; zoom: number } | null>(null)
   const [pickCountry, setPickCountry] = useState<string | null>(null)
@@ -28,7 +29,8 @@ export function MapPage() {
 
   // El lugar abierto vive en la URL (?p=city:123) para poder enlazarlo y usar "atrás".
   const param = params.get('p')
-  const current = placeFromParam(geo, entries, param)
+  const gazetteer = useGazetteer()
+  const current = placeFromParam(geo, entries, param, gazetteer)
   const tripId = params.get('viaje')
   const tripSummary = useMemo(() => {
     const trip = trips.find((t) => t.id === tripId)
@@ -110,9 +112,9 @@ export function MapPage() {
     const lon = current.lon ?? (current.regionId ? null : geo.countries[current.countryId]?.center[0])
     const lat = current.lat ?? (current.regionId ? null : geo.countries[current.countryId]?.center[1])
     if (lon != null && lat != null) setFocus({ lon, lat, zoom: zoomFor(current) })
-    // Solo al cambiar el lugar abierto.
+    // Solo al cambiar el lugar abierto (o cuando termina de resolverse desde el nomenclátor).
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [param])
+  }, [param, current == null])
 
   const onSelect = (s: MapSelection) => {
     if (s.type === 'country') open(countryPlace(geo, s.id), false)
@@ -182,6 +184,7 @@ export function MapPage() {
             onClose={() => open(null)}
             closeLabel={tripSummary ? `Volver a ${tripSummary.trip.name}` : undefined}
             defaultTripId={tripSummary?.trip.id ?? null}
+            basePath={basePath}
             onStartPick={readOnly ? undefined : (id) => setPickCountry(id)}
           />
         ) : tripSummary ? (
@@ -257,7 +260,7 @@ export function MapPage() {
   )
 }
 
-function placeFromParam(geo: Geo, entries: ReturnType<typeof useAppData>['entries'], param: string | null): Place | null {
+function placeFromParam(geo: Geo, entries: ReturnType<typeof useAppData>['entries'], param: string | null, gz: Gazetteer | null): Place | null {
   if (!param) return null
   const i = param.indexOf(':')
   const type = param.slice(0, i)
@@ -266,8 +269,18 @@ function placeFromParam(geo: Geo, entries: ReturnType<typeof useAppData>['entrie
   if (entry) return entryPlace(entry)
   if (type === 'country' && geo.countries[id]) return countryPlace(geo, id)
   if (type === 'region' && geo.regions[id]) return regionPlace(geo, id)
-  // Ciudades/lugares elegidos en el buscador que aún no tienen entrada.
-  return pendingPlaces.get(param) ?? null
+  // Ciudades/lugares sin entrada: elegidos en el buscador o abiertos desde un enlace (sugerencias, recarga).
+  const pending = pendingPlaces.get(param)
+  if (pending) return pending
+  if (type === 'city') {
+    const c = gz?.cities.find((r) => String(r[0]) === id)
+    if (c) return { type: 'city', id, name: c[1], countryId: c[2], regionId: c[3], lon: c[4], lat: c[5], population: c[6] }
+  }
+  if (type === 'landmark') {
+    const l = gz?.landmarks.find((r) => r[0] === id)
+    if (l) return { type: 'landmark', id, name: l[1], countryId: l[2], regionId: l[3], lon: l[4], lat: l[5], source: l[6] }
+  }
+  return null
 }
 
 const pendingPlaces = new Map<string, Place>()

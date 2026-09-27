@@ -14,7 +14,9 @@ import {
   type Trip,
 } from '../lib/model'
 import type { Place } from '../lib/search'
+import { combineWith, useGazetteer } from '../lib/suggestions'
 import { EntryEditor, PhotoPreview } from './EntryEditor'
+import { SuggestionList } from './Suggestions'
 import { SearchBox } from './SearchBox'
 import { Markdown, Meter, Stars, formatNumber, formatPercent } from './ui'
 import './PlacePanel.css'
@@ -31,6 +33,7 @@ interface Props {
   closeLabel?: string
   defaultTripId?: string | null
   onStartPick?: (countryId: string) => void
+  basePath?: string
 }
 
 const languageNames = new Intl.DisplayNames(['es'], { type: 'language' })
@@ -42,7 +45,7 @@ const langName = (code: string) => {
   }
 }
 
-export function PlacePanel({ uid, geo, place, entries, trips, summaries, onOpen, onClose, closeLabel, defaultTripId, onStartPick }: Props) {
+export function PlacePanel({ uid, geo, place, entries, trips, summaries, onOpen, onClose, closeLabel, defaultTripId, onStartPick, basePath = '' }: Props) {
   const key = entryKey(place.type, place.id)
   const entry = entries.find((e) => e.key === key) ?? null
   const [editing, setEditing] = useState<Entry | null>(null)
@@ -147,6 +150,10 @@ export function PlacePanel({ uid, geo, place, entries, trips, summaries, onOpen,
         )
       )}
 
+      {entry && !editing && (entry.status === 'wishlist' || entry.status === 'planned') && (
+        <CombineSection uid={uid} geo={geo} entry={entry} entries={entries} summaries={summaries} basePath={basePath} />
+      )}
+
       {place.type === 'country' && country && (
         <>
           <section className="panel__section">
@@ -187,6 +194,16 @@ export function PlacePanel({ uid, geo, place, entries, trips, summaries, onOpen,
         </>
       )}
     </article>
+  )
+}
+
+function CombineSection({ uid, geo, entry, entries, summaries, basePath }: { uid: string | null; geo: Geo; entry: Entry; entries: Entry[]; summaries: Map<string, CountrySummary>; basePath: string }) {
+  const gz = useGazetteer()
+  return (
+    <section className="panel__section">
+      <h3 className="panel__h3">Combínalo con</h3>
+      {gz ? <SuggestionList geo={geo} suggestions={combineWith(geo, entry, entries, summaries, gz, 6)} basePath={basePath} uid={uid} /> : <p className="mono muted panel__small">Buscando lugares cercanos…</p>}
+    </section>
   )
 }
 

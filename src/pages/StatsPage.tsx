@@ -112,19 +112,10 @@ export function StatsPage() {
           )}
 
           {s.wishlist.length > 0 && (
-            <section className="stats-section">
-              <h2>Quiero ir</h2>
-              <ul className="stats-wish">
-                {s.wishlist.map((e) => (
-                  <li key={e.key}>
-                    <Link to={mapLink(basePath, `p=${encodeURIComponent(e.key)}`)}>
-                      {flagEmoji(geo.countries[e.countryId]?.iso2 ?? null)} {e.name}
-                    </Link>
-                    {e.priority && <span className="badge">{['', 'Alta', 'Media', 'Baja'][e.priority]}</span>}
-                  </li>
-                ))}
-              </ul>
-            </section>
+            <p className="notice">
+              Tienes {s.wishlist.length} {s.wishlist.length === 1 ? 'lugar' : 'lugares'} en Quiero ir.{' '}
+              <Link to={`${basePath}/viajes?tab=quiero-ir`}>Ver lista y sugerencias →</Link>
+            </p>
           )}
         </>
       )}

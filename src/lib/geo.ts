@@ -29,6 +29,7 @@ export interface Country {
   population: number | null
   areaKm2: number | null
   center: [number, number]
+  neighbours: string[] // países con frontera terrestre
 }
 
 export interface Region {

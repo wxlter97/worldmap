@@ -44,6 +44,14 @@ const CENTRAL_AMERICA = ['BLZ', 'GTM', 'SLV', 'HND', 'NIC', 'CRI', 'PAN']
 const SOUTH_AMERICA = ['ARG', 'BOL', 'BRA', 'CHL', 'COL', 'ECU', 'GUY', 'PRY', 'PER', 'SUR', 'URY', 'VEN']
 const NORDICS = ['DNK', 'FIN', 'ISL', 'NOR', 'SWE']
 const EU = 'AUT BEL BGR HRV CYP CZE DNK EST FIN FRA DEU GRC HUN IRL ITA LVA LTU LUX MLT NLD POL PRT ROU SVK SVN ESP SWE'.split(' ')
+
+/** Logros regionales y sus países (para sugerir lo que falta). */
+export const REGION_SETS: Record<string, string[]> = {
+  centroamerica: CENTRAL_AMERICA,
+  sudamerica: SOUTH_AMERICA,
+  nordicos: NORDICS,
+  ue: EU,
+}
 const MEGACITY_POPULATION = 5_000_000
 
 const tier = (id: string, group: AchievementGroup, title: string, description: string, glyph: string, target: number, measure: AchievementDef['measure']): AchievementDef => ({
