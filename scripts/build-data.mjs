@@ -160,6 +160,7 @@ function countryAt(pt) {
 const iso2ToId = Object.fromEntries(Object.values(countries).filter((c) => c.iso2).map((c) => [c.iso2, c.id]))
 
 // --- Ciudades ---
+const countryNames = new Set(Object.values(countries).flatMap((c) => [c.name, c.nameEn]).map((x) => x.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase()))
 const namesEs = readJson('city-names-es.json')
 const cities = []
 let droppedCities = 0
@@ -169,7 +170,7 @@ for (const line of fs.readFileSync(path.join(RAW, 'cities15000.txt'), 'utf8').sp
   const pt = [Number(c[5]), Number(c[4])]
   const country = iso2ToId[c[8]] ?? countryAt(pt)
   if (!country) { droppedCities++; continue }
-  const name = namesEs[c[0]] ?? c[1]
+  const name = shortCityName(namesEs[c[0]], c[1])
   // [id, nombre, país, región, lon, lat, población, esCapital]
   const region = regionAt(country, pt) ?? regionByGeonamesCode[`${c[8]}.${c[10]}`] ?? null
   cities.push([Number(c[0]), name, country, region, round(pt[0]), round(pt[1]), Number(c[14]), c[7] === 'PPLC' ? 1 : 0])
@@ -212,5 +213,17 @@ writeJson('landmarks.json', landmarks)
 fs.rmSync(TMP, { recursive: true, force: true })
 const kinds = Object.values(countries).reduce((a, c) => ({ ...a, [c.kind]: (a[c.kind] ?? 0) + 1 }), {})
 console.log({ ...kinds, regions: Object.keys(regions).length, cities: cities.length, droppedCities, landmarks: landmarks.length })
+
+// Wikidata a veces etiqueta el municipio ("Ciudad de Madrid"): se quita el prefijo si el resto coincide con
+// el nombre de GeoNames, salvo que sea también el nombre de un país (Ciudad de México, de Panamá…).
+function shortCityName(es, geonamesName) {
+  if (!es) return geonamesName
+  const m = es.match(/^(?:Ciudad|Municipio|Distrito|Villa|Comuna|Partido|Cantón|Condado) (?:de|del) (.+)$/)
+  if (!m) return es
+  const rest = m[1]
+  const norm = (x) => x.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase()
+  if (countryNames.has(norm(rest))) return es
+  return norm(geonamesName).includes(norm(rest)) ? rest : es
+}
 
 function round(n) { return Math.round(n * 1e4) / 1e4 }

@@ -18,7 +18,7 @@ const landmark = (id) => landmarks.find((l) => l[0] === id)
 
 // [tipo, nombre|id, país, estado, [[inicio, fin]], etiquetas]
 const SEED = [
-  ['city', 'Ciudad de Madrid', 'ESP', 'visited', [['2019-06-02', '2019-06-06']], ['trabajo']],
+  ['city', 'Madrid', 'ESP', 'visited', [['2019-06-02', '2019-06-06']], ['trabajo']],
   ['city', 'París', 'FRA', 'visited', [['2019-06-07', '2019-06-10']], ['museos']],
   ['city', 'Roma', 'ITA', 'visited', [['2019-06-11', '2019-06-14']], []],
   ['landmark', 'wonder-3', 'ITA', 'visited', [['2019-06-12', '2019-06-12']], []],
