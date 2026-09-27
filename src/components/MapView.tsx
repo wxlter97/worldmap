@@ -6,6 +6,7 @@ import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Feature, FeatureCollection, MultiPolygon, Point, Polygon } from 'geojson'
 import { loadAdmin1, type Geo } from '../lib/geo'
+import { readPref, writePref } from '../lib/prefs'
 import { BEEN_STATUSES, type CountrySummary, type Entry } from '../lib/model'
 import './MapView.css'
 
@@ -44,12 +45,22 @@ maplibregl.setWorkerUrl(workerUrl)
 const C = { faro: '#FFDB00', ink: '#111111', paper: '#F4F3EF', white: '#FFFFFF', ash: '#C9C9C2', smoke: '#6B6B63' }
 
 /** Patrones de relleno dibujados en canvas (sin colores fuera de la paleta). */
-function makePattern(kind: 'hatch-faro' | 'hatch-ink' | 'dots'): ImageData {
-  const size = 12
+function makePattern(kind: 'hatch-faro' | 'hatch-ink' | 'dots' | 'foil'): ImageData {
+  const size = kind === 'foil' ? 16 : 12
   const ctx = new OffscreenCanvas(size, size).getContext('2d')!
-  ctx.fillStyle = C.white
+  ctx.fillStyle = kind === 'foil' ? C.ink : C.white
   ctx.fillRect(0, 0, size, size)
-  if (kind === 'dots') {
+  if (kind === 'foil') {
+    // "Lámina" del mapa de raspar: ink con rayado fino en ink-soft.
+    ctx.strokeStyle = '#3D3D38'
+    ctx.lineWidth = 1
+    ctx.beginPath()
+    for (const o of [-size, -size / 2, 0, size / 2, size]) {
+      ctx.moveTo(o, size)
+      ctx.lineTo(o + size, 0)
+    }
+    ctx.stroke()
+  } else if (kind === 'dots') {
     ctx.fillStyle = C.ink
     ctx.fillRect(5, 5, 2, 2)
   } else {
@@ -70,6 +81,7 @@ export function MapView({ geo, entries, summaries, selectedCountry, focus, onSel
   const mapRef = useRef<maplibregl.Map | null>(null)
   const [ready, setReady] = useState(false)
   const [globe, setGlobe] = useState(false)
+  const [scratch, setScratch] = useState(() => readPref('scratch'))
   const onSelectRef = useRef(onSelect)
   onSelectRef.current = onSelect
   const selectedRef = useRef(selectedCountry)
@@ -104,6 +116,7 @@ export function MapView({ geo, entries, summaries, selectedCountry, focus, onSel
       map.addImage('hatch-faro', makePattern('hatch-faro'))
       map.addImage('hatch-ink', makePattern('hatch-ink'))
       map.addImage('dots', makePattern('dots'))
+      map.addImage('foil', makePattern('foil'))
 
       map.addSource('countries', { type: 'geojson', data: geo.shapes, promoteId: 'id' })
       map.addSource('regions', { type: 'geojson', data: emptyFc(), promoteId: 'id' })
@@ -133,6 +146,15 @@ export function MapView({ geo, entries, summaries, selectedCountry, focus, onSel
         paint: {
           'fill-pattern': ['match', ['get', 'status'], 'transit', 'hatch-faro', 'planned', 'hatch-ink', 'dots'],
         },
+      })
+      // Modo raspar: lámina sobre lo no visitado (y sobre países parciales, bajo sus regiones visitadas).
+      map.addLayer({
+        id: 'country-foil',
+        type: 'fill',
+        source: 'countries',
+        layout: { visibility: 'none' },
+        filter: ['any', ['!', ['in', ['get', 'status'], ['literal', ['lived', 'visited']]]], ['==', ['get', 'partial'], true]],
+        paint: { 'fill-pattern': 'foil' },
       })
       map.addLayer({
         id: 'region-fill',
@@ -337,6 +359,23 @@ export function MapView({ geo, entries, summaries, selectedCountry, focus, onSel
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready, fitKey])
 
+  // --- Modo raspar ---
+  useEffect(() => {
+    if (!ready) return
+    const map = mapRef.current!
+    map.setLayoutProperty('country-foil', 'visibility', scratch ? 'visible' : 'none')
+    map.setLayoutProperty('country-pattern', 'visibility', scratch ? 'none' : 'visible')
+    map.setPaintProperty(
+      'country-fill',
+      'fill-color',
+      scratch
+        ? ['match', ['get', 'status'], ['lived', 'visited'], C.faro, C.paper]
+        : ['match', ['get', 'status'], 'lived', C.ink, 'visited', C.faro, C.white],
+    )
+    map.setPaintProperty('country-fill', 'fill-opacity', scratch ? 1 : ['case', ['boolean', ['get', 'partial'], false], 0.45, 1])
+    writePref('scratch', scratch)
+  }, [ready, scratch])
+
   useEffect(() => {
     if (ready) mapRef.current!.setProjection({ type: globe ? 'globe' : 'mercator' })
   }, [ready, globe])
@@ -349,15 +388,29 @@ export function MapView({ geo, entries, summaries, selectedCountry, focus, onSel
     <div className={replaying ? 'map-wrap map-wrap--replay' : 'map-wrap'}>
       <div ref={container} className="map" />
       <div className="map-legend" aria-label="Leyenda" hidden={replaying}>
-        <span><i className="sw sw--lived" />Vivido</span>
-        <span><i className="sw sw--visited" />Visitado</span>
-        <span><i className="sw sw--transit" />Escala</span>
-        <span><i className="sw sw--planned" />Planeado</span>
-        <span><i className="sw sw--wishlist" />Quiero ir</span>
+        {scratch ? (
+          <>
+            <span><i className="sw sw--foil" />Por raspar</span>
+            <span><i className="sw sw--visited" />Raspado (Vivido o Visitado)</span>
+          </>
+        ) : (
+          <>
+            <span><i className="sw sw--lived" />Vivido</span>
+            <span><i className="sw sw--visited" />Visitado</span>
+            <span><i className="sw sw--transit" />Escala</span>
+            <span><i className="sw sw--planned" />Planeado</span>
+            <span><i className="sw sw--wishlist" />Quiero ir</span>
+          </>
+        )}
       </div>
-      <button type="button" className="btn btn--small map-projection" onClick={() => setGlobe((g) => !g)}>
-        {globe ? 'Plano' : 'Globo'}
-      </button>
+      <div className="map-modes">
+        <button type="button" className="btn btn--small" aria-pressed={scratch} onClick={() => setScratch((v) => !v)}>
+          {scratch ? 'Normal' : 'Raspar'}
+        </button>
+        <button type="button" className="btn btn--small" onClick={() => setGlobe((g) => !g)}>
+          {globe ? 'Plano' : 'Globo'}
+        </button>
+      </div>
     </div>
   )
 }

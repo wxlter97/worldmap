@@ -71,3 +71,7 @@
     padding: var(--sp-4) 20px;
   }
 }
+
+.account-link-btn {
+  align-self: flex-start;
+}

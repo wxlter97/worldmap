@@ -53,6 +53,10 @@ npm run build:data   # simplifica y escribe public/data/
   con arcos de círculo máximo cortados en el antimeridiano. La repetición pinta el mapa solo con lo visitado hasta cada fecha.
 - **Logros** (`src/lib/achievements.ts`): 30 logros en 6 grupos, evaluados en orden cronológico para fechar el desbloqueo.
   El ícono sigue la serie de íconos wxlter: la banda amarilla sube con el progreso.
+- **Modo raspar**: lámina ink rayada sobre lo no visitado; se "raspan" los países Vivido/Visitado y, en países
+  parciales, solo sus regiones visitadas. Preferencia por dispositivo (localStorage).
+- **Exportar** (`/exportar`): póster PNG dibujado en canvas con proyección Equal Earth (4 formatos, 4 estilos, líneas
+  opcionales), CSV (una fila por visita, UTF-8 con BOM) y copia JSON que se puede restaurar (sobrescribe por clave).
 - **Links de solo lectura**: `shares/{token}` → `{ uid, displayName }`. Con `users/{uid}.sharing.enabled = true` las reglas
   permiten leer el perfil, entradas, viajes y fotos de ese usuario sin sesión. Regenerar el link invalida el anterior;
   desactivarlo corta toda lectura pública. El perfil público no debe contener datos privados (no se guarda el correo).

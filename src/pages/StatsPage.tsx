@@ -10,7 +10,7 @@ import { computeStats } from '../lib/stats'
 import './StatsPage.css'
 
 export function StatsPage() {
-  const { geo, entries, summaries, basePath } = useAppData()
+  const { geo, entries, summaries, basePath, readOnly } = useAppData()
   const s = useMemo(() => computeStats(geo, entries, summaries), [geo, entries, summaries])
   const maxDays = s.daysByCountry[0]?.days ?? 1
   const achievements = useAchievements(geo, entries)
@@ -22,7 +22,15 @@ export function StatsPage() {
     <div className="stats-page">
       <div className="stats-page__head">
         <h1>Estadísticas</h1>
-        <span className="label muted">Cuenta Vivido + Visitado</span>
+        <span className="label muted">
+          Cuenta Vivido + Visitado
+          {!readOnly && (
+            <>
+              {' · '}
+              <Link to="/exportar" className="link-btn">Exportar póster</Link>
+            </>
+          )}
+        </span>
       </div>
 
       <div className="tabs" role="tablist">

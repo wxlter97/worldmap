@@ -9,6 +9,7 @@ import { AuthProvider, useAuth } from './lib/auth'
 import { ensureProfile, resolveShare } from './lib/data'
 import { firebaseConfigured } from './lib/firebase'
 import { AccountPage } from './pages/AccountPage'
+import { ExportPage } from './pages/ExportPage'
 import { ListPage } from './pages/ListPage'
 import { LoginPage } from './pages/LoginPage'
 import { MapPage } from './pages/MapPage'
@@ -25,6 +26,7 @@ function DataRoutes({ shareName }: { shareName?: string }) {
         <Route path="viajes" element={<TripsPage />} />
         <Route path="estadisticas" element={<StatsPage />} />
         {shareName === undefined && <Route path="cuenta" element={<AccountPage />} />}
+        {shareName === undefined && <Route path="exportar" element={<ExportPage />} />}
         <Route path="*" element={<Navigate to="." replace />} />
       </Route>
     </Routes>

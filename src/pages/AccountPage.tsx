@@ -1,5 +1,6 @@
 import { signOut } from 'firebase/auth'
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useAppData } from '../app/AppData'
 import { disableSharing, enableSharing, saveDisplayName } from '../lib/data'
 import { auth } from '../lib/firebase'
@@ -101,6 +102,12 @@ export function AccountPage() {
           <p className="mono muted account-small">Desactivado. Actívalo para obtener un link.</p>
         )}
         {error && <p className="field-error" role="alert">{error}</p>}
+      </section>
+
+      <section className="account-section">
+        <h2>Exportar</h2>
+        <p className="account-copy">Póster para imprimir o compartir, CSV para hojas de cálculo y copia de seguridad JSON.</p>
+        <Link to="/exportar" className="btn account-link-btn">Ir a Exportar →</Link>
       </section>
 
       <section className="account-section">

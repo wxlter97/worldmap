@@ -61,10 +61,16 @@
   background: radial-gradient(var(--ink) 1px, var(--white) 1.5px) 0 0 / 5px 5px;
 }
 
-.map-projection {
+.map-modes {
   position: absolute;
   top: var(--sp-3);
   right: var(--sp-3);
+  display: flex;
+  gap: var(--sp-2);
+}
+
+.sw--foil {
+  background: repeating-linear-gradient(-45deg, var(--ink-soft) 0 1px, var(--ink) 1px 6px);
 }
 
 .map-wrap--replay .maplibregl-ctrl-bottom-right {
@@ -123,8 +129,9 @@
     font-size: 10px;
   }
 
-  .map-projection {
+  .map-modes {
     top: var(--sp-2);
     right: var(--sp-2);
+    flex-direction: column;
   }
 }

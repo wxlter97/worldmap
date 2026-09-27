@@ -9,6 +9,7 @@ import { SearchBox } from '../components/SearchBox'
 import { TripPanel } from '../components/TripPanel'
 import { StatCard, formatPercent } from '../components/ui'
 import { loadAdmin1, type Geo } from '../lib/geo'
+import { readPref, writePref } from '../lib/prefs'
 import { buildJourney, journeyArcs } from '../lib/journey'
 import { BEEN_STATUSES, summarizeCountries, type Entry } from '../lib/model'
 import type { Place } from '../lib/search'
@@ -288,20 +289,4 @@ function entriesUntil(entries: Entry[], date: string): Entry[] {
     if (dates.length) out.push({ ...e, dates })
   }
   return out
-}
-
-function readPref(key: string): boolean {
-  try {
-    return localStorage.getItem(`wm:${key}`) === '1'
-  } catch {
-    return false
-  }
-}
-
-function writePref(key: string, value: boolean) {
-  try {
-    localStorage.setItem(`wm:${key}`, value ? '1' : '0')
-  } catch {
-    // almacenamiento no disponible (modo privado): la preferencia no se recuerda
-  }
 }
