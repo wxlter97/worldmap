@@ -1,0 +1,41 @@
+rules_version = '2';
+
+// Modelo:
+//   users/{uid}                 perfil + sharing { enabled, token }
+//   users/{uid}/entries/{key}   una entrada por lugar ("country:SLV", "city:3583361", …)
+//   users/{uid}/trips/{id}      viajes
+//   shares/{token}              { uid } — resuelve un link de solo lectura
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function isOwner(uid) { return signedIn() && request.auth.uid == uid; }
+    function sharingEnabled(uid) {
+      return get(/databases/$(database)/documents/users/$(uid)).data.get('sharing', {}).get('enabled', false) == true;
+    }
+
+    match /users/{uid} {
+      allow read: if isOwner(uid) || sharingEnabled(uid);
+      allow write: if isOwner(uid);
+
+      match /entries/{key} {
+        allow read: if isOwner(uid) || sharingEnabled(uid);
+        allow write: if isOwner(uid)
+          && request.resource.data.status in ['lived', 'visited', 'transit', 'planned', 'wishlist']
+          && request.resource.data.description.size() <= 20000;
+        allow delete: if isOwner(uid);
+      }
+
+      match /trips/{tripId} {
+        allow read: if isOwner(uid) || sharingEnabled(uid);
+        allow write: if isOwner(uid);
+      }
+    }
+
+    match /shares/{token} {
+      allow get: if true;
+      allow list: if false;
+      allow create, update: if signedIn() && request.resource.data.uid == request.auth.uid;
+      allow delete: if signedIn() && resource.data.uid == request.auth.uid;
+    }
+  }
+}

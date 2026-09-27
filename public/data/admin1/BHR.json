@@ -1,0 +1,7 @@
+{"type":"FeatureCollection", "features": [
+{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[50.504,26.242],[50.552,26.194],[50.587,26.242],[50.504,26.242]]]},"properties":{"id":"BHR-4929","country":"BHR"}},
+{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[50.491,26.048],[50.524,26.129],[50.552,26.194],[50.504,26.242],[50.453,26.15],[50.491,26.048]]]},"properties":{"id":"BHR-4927","country":"BHR"}},
+{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[50.616,26.096],[50.524,26.129],[50.491,26.048],[50.46,25.985],[50.547,25.853],[50.604,25.855],[50.616,26.096]]]},"properties":{"id":"BHR-4926","country":"BHR"}},
+{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[50.552,26.194],[50.524,26.129],[50.616,26.096],[50.552,26.194]]]},"properties":{"id":"BHR-4928","country":"BHR"}},
+{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[50.602,26.279],[50.612,26.241],[50.648,26.239],[50.655,26.277],[50.602,26.279]]]},"properties":{"id":"BHR-4930","country":"BHR"}}
+]}

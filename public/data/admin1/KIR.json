@@ -1,0 +1,4 @@
+{"type":"FeatureCollection", "features": [
+{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[-157.191,1.764],[-157.382,1.902],[-157.449,1.8],[-157.287,1.75],[-157.191,1.764]]]},"properties":{"id":"KIR+00?","country":"KIR"}},
+{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[-155.899,-5.617],[-155.906,-5.635],[-155.868,-5.63],[-155.88,-5.609],[-155.899,-5.617]]]},"properties":{"id":"KIR+99?","country":"KIR"}}
+]}

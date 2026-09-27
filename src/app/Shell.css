@@ -1,0 +1,111 @@
+.shell {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.shell__header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  height: var(--header-h);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  padding: 0 var(--sp-8);
+  background: var(--paper);
+  border-bottom: var(--border);
+}
+
+.shell__brand {
+  display: flex;
+  align-items: flex-end;
+  gap: 9px;
+  text-decoration: none;
+}
+
+.shell__wordmark {
+  font-family: var(--font-display);
+  font-size: 22px;
+  letter-spacing: -0.035em;
+  line-height: 0.8;
+}
+
+.shell__app {
+  line-height: 1;
+  color: var(--smoke);
+}
+
+.shell__nav {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  font-family: var(--font-mono);
+  font-size: var(--fs-13);
+}
+
+.shell__nav a {
+  text-decoration: none;
+  padding: 4px 0;
+  border-bottom: 2px solid transparent;
+}
+
+.shell__nav a:hover,
+.shell__nav a.active {
+  border-bottom-color: var(--brand-faro);
+}
+
+.shell__nav a.active {
+  font-weight: 700;
+}
+
+.shell__out {
+  background: var(--brand-faro);
+  border: var(--border);
+  padding: 4px 10px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.shell__out:hover {
+  background: var(--ink);
+  color: var(--brand-faro);
+}
+
+.shell__readonly {
+  background: var(--ink);
+  color: var(--brand-faro);
+  padding: 6px var(--sp-8);
+}
+
+.shell__main {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.screen-msg {
+  margin: var(--sp-8) auto;
+  max-width: 560px;
+  padding: var(--sp-4);
+}
+
+@media (max-width: 600px) {
+  .shell__header {
+    padding: 0 20px;
+  }
+
+  .shell__app {
+    display: none;
+  }
+
+  .shell__nav {
+    gap: 12px;
+  }
+
+  .shell__readonly {
+    padding: 6px 20px;
+  }
+}

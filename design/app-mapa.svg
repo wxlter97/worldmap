@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!-- Serie de íconos wxlter: siguiente paso tras Notas (834) = banda completa, inicial invertida a ink. -->
+  <rect width="1024" height="1024" fill="#FFDB00"/>
+  <polygon fill="#111111" points="212,774 212,250 400,250 512,470 624,250 812,250 812,774 660,774 660,480 560,680 464,680 364,480 364,774"/>
+</svg>

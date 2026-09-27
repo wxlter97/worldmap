@@ -1,0 +1,116 @@
+.map-wrap {
+  position: relative;
+  height: 100%;
+  min-height: 0;
+}
+
+.map {
+  position: absolute;
+  inset: 0;
+}
+
+.map-legend {
+  position: absolute;
+  left: var(--sp-3);
+  bottom: var(--sp-3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2) var(--sp-3);
+  max-width: calc(100% - 90px);
+  padding: 8px 10px;
+  border: var(--border);
+  background: var(--white);
+  font-family: var(--font-mono);
+  font-size: var(--fs-11);
+}
+
+.map-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sw {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--ink);
+  display: inline-block;
+}
+
+.sw--lived {
+  background: var(--ink);
+}
+
+.sw--visited {
+  background: var(--brand-faro);
+}
+
+.sw--transit {
+  background: repeating-linear-gradient(-45deg, var(--brand-faro) 0 3px, var(--white) 3px 6px);
+}
+
+.sw--planned {
+  background: repeating-linear-gradient(-45deg, var(--ink) 0 1px, var(--white) 1px 5px);
+}
+
+.sw--wishlist {
+  background: radial-gradient(var(--ink) 1px, var(--white) 1.5px) 0 0 / 5px 5px;
+}
+
+.map-projection {
+  position: absolute;
+  top: var(--sp-3);
+  right: var(--sp-3);
+}
+
+/* Controles de MapLibre con el lenguaje del sistema */
+.maplibregl-ctrl-group {
+  border-radius: 0 !important;
+  border: var(--border);
+  box-shadow: none !important;
+}
+
+.maplibregl-ctrl-group button {
+  width: var(--touch) !important;
+  height: var(--touch) !important;
+}
+
+.maplibregl-ctrl-group button + button {
+  border-top: var(--border) !important;
+}
+
+.maplibregl-ctrl-attrib {
+  font-family: var(--font-mono);
+  font-size: 10px;
+}
+
+.map-tip .maplibregl-popup-content {
+  border-radius: 0;
+  border: var(--border);
+  box-shadow: none;
+  padding: 4px 8px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.map-tip .maplibregl-popup-tip {
+  display: none;
+}
+
+@media (max-width: 800px) {
+  .map-legend {
+    top: var(--sp-2);
+    bottom: auto;
+    left: var(--sp-2);
+    max-width: calc(100% - 90px);
+    padding: 4px 6px;
+    gap: 4px 8px;
+    font-size: 10px;
+  }
+
+  .map-projection {
+    top: var(--sp-2);
+    right: var(--sp-2);
+  }
+}

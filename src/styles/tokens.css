@@ -1,0 +1,58 @@
+/* Tokens del design system wxlter (design_handoff_marca_wxlter/README.md). */
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Archivo+Black&family=JetBrains+Mono:wght@400;700&display=swap');
+
+:root {
+  /* Color */
+  --brand-faro: #ffdb00;
+  --ink: #111111;
+  --paper: #f4f3ef;
+  --white: #ffffff;
+  --smoke: #6b6b63;
+  --ash: #c9c9c2;
+  --ink-soft: #3d3d38;
+  --ink-raised: #1c1c1a;
+  --on-ink: #edede7;
+  --on-ink-dim: #8a8a80;
+  --disabled-bg: #efefe9;
+  --danger: #d92b0c;
+  --success: #0b7a45;
+
+  /* Tipografía */
+  --font-display: 'Archivo Black', 'Arial Black', sans-serif;
+  --font-body: 'Archivo', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --fs-11: 11px;
+  --fs-13: 13px;
+  --fs-16: 16px;
+  --fs-20: 20px;
+  --fs-25: 25px;
+  --fs-31: 31px;
+  --fs-39: 39px;
+  --fs-49: 49px;
+  --fs-61: 61px;
+
+  /* Espaciado (múltiplos de 4) */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  --sp-12: 48px;
+  --sp-16: 64px;
+  --sp-24: 96px;
+
+  /* Forma: radio 0 siempre, sin sombras */
+  --border: 2px solid var(--ink);
+  --border-section: 3px solid var(--ink);
+  --focus: 3px solid var(--brand-faro);
+  --touch: 44px;
+  --hover-ms: 120ms;
+  --header-h: 60px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --hover-ms: 0ms;
+  }
+}

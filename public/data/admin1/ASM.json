@@ -1,0 +1,7 @@
+{"type":"FeatureCollection", "features": [
+{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[-170.693,-14.315],[-170.722,-14.289],[-170.831,-14.319],[-170.755,-14.367],[-170.693,-14.315]]]},"properties":{"id":"ASM-5002","country":"ASM"}},
+{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[-170.722,-14.289],[-170.693,-14.315],[-170.62,-14.255],[-170.698,-14.261],[-170.722,-14.289]]]},"properties":{"id":"ASM-4998","country":"ASM"}},
+{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[-169.464,-14.223],[-169.543,-14.237],[-169.523,-14.271],[-169.464,-14.223]]]},"properties":{"id":"ASM-4999","country":"ASM"}},
+{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[-168.162,-14.533],[-168.16,-14.521],[-168.173,-14.524],[-168.162,-14.533]]]},"properties":{"id":"ASM-5000","country":"ASM"}},
+{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[-171.073,-11.053],[-171.086,-11.051],[-171.082,-11.066],[-171.073,-11.062],[-171.073,-11.053]]]},"properties":{"id":"ASM-5001","country":"ASM"}}
+]}

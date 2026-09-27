@@ -1,0 +1,11 @@
+{"type":"FeatureCollection", "features": [
+{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[12.491,43.965],[12.427,43.969],[12.448,43.955],[12.491,43.965]]]},"properties":{"id":"SMR-4886","country":"SMR"}},
+{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[12.491,43.965],[12.448,43.955],[12.457,43.933],[12.492,43.949],[12.491,43.965]]]},"properties":{"id":"SMR-4887","country":"SMR"}},
+{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[12.492,43.949],[12.457,43.933],[12.465,43.924],[12.468,43.923],[12.478,43.923],[12.483,43.929],[12.492,43.949]]]},"properties":{"id":"SMR-4888","country":"SMR"}},
+{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[12.478,43.923],[12.468,43.923],[12.464,43.9],[12.478,43.923]]]},"properties":{"id":"SMR-4889","country":"SMR"}},
+{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[12.464,43.9],[12.468,43.923],[12.465,43.924],[12.441,43.914],[12.435,43.904],[12.441,43.893],[12.464,43.9]]]},"properties":{"id":"SMR-4890","country":"SMR"}},
+{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[12.441,43.893],[12.435,43.904],[12.39,43.918],[12.421,43.895],[12.441,43.893]]]},"properties":{"id":"SMR-4891","country":"SMR"}},
+{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[12.39,43.918],[12.435,43.904],[12.441,43.914],[12.418,43.941],[12.386,43.925],[12.39,43.918]]]},"properties":{"id":"SMR-4884","country":"SMR"}},
+{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[12.386,43.925],[12.418,43.941],[12.417,43.964],[12.386,43.925]]]},"properties":{"id":"SMR-4885","country":"SMR"}},
+{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[12.417,43.964],[12.418,43.941],[12.441,43.914],[12.465,43.924],[12.457,43.933],[12.448,43.955],[12.427,43.969],[12.417,43.964]]]},"properties":{"id":"SMR-4883","country":"SMR"}}
+]}

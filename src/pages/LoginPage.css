@@ -1,0 +1,62 @@
+.login {
+  min-height: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr));
+}
+
+.login__brand {
+  background: var(--brand-faro);
+  padding: 76px 32px 64px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 34px;
+  border-right: var(--border);
+  border-bottom: var(--border);
+}
+
+.login__lockup {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+}
+
+.login__wordmark {
+  font-family: var(--font-display);
+  font-size: 44px;
+  letter-spacing: -0.035em;
+  line-height: 0.8;
+}
+
+.login__title {
+  font-size: clamp(40px, 6vw, 72px);
+  line-height: 0.94;
+  letter-spacing: -0.04em;
+  max-width: 12ch;
+  text-wrap: balance;
+}
+
+.login__form-wrap {
+  display: grid;
+  place-items: center;
+  padding: 48px 20px;
+}
+
+.login__form {
+  width: min(100%, 400px);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.login__env {
+  font-size: 11px;
+}
+
+@media (max-width: 600px) {
+  .login__brand {
+    padding: 48px 20px 36px;
+    gap: 20px;
+    border-right: 0;
+  }
+}
