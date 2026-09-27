@@ -2,15 +2,17 @@ import booleanPointInPolygon from '@turf/boolean-point-in-polygon'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useAppData } from '../app/AppData'
-import { MapView, type MapSelection } from '../components/MapView'
+import { MapView, type MapLines, type MapSelection } from '../components/MapView'
+import { ReplayBar, type ReplayState } from '../components/ReplayBar'
 import { PlacePanel, countryPlace, entryPlace, regionPlace } from '../components/PlacePanel'
 import { SearchBox } from '../components/SearchBox'
 import { TripPanel } from '../components/TripPanel'
 import { StatCard, formatPercent } from '../components/ui'
 import { loadAdmin1, type Geo } from '../lib/geo'
-import { BEEN_STATUSES } from '../lib/model'
+import { buildJourney, journeyArcs } from '../lib/journey'
+import { BEEN_STATUSES, summarizeCountries, type Entry } from '../lib/model'
 import type { Place } from '../lib/search'
-import { routeCoords, summarizeTrip } from '../lib/trips'
+import { summarizeTrip } from '../lib/trips'
 import './MapPage.css'
 
 const zoomFor = (p: Place) => (p.type === 'country' ? 4 : p.type === 'region' ? 5.5 : 7)
@@ -31,8 +33,58 @@ export function MapPage() {
     const trip = trips.find((t) => t.id === tripId)
     return trip ? summarizeTrip(geo, trip, entries) : null
   }, [geo, trips, entries, tripId])
-  const route = useMemo(() => (tripSummary ? routeCoords(tripSummary.stops) : null), [tripSummary])
-  const closeTrip = () => {
+
+  // --- Líneas de viaje y repetición ---
+  const [showLines, setShowLines] = useState(() => readPref('lines'))
+  const [replay, setReplay] = useState<ReplayState | null>(null)
+  const journey = useMemo(() => buildJourney(geo, entries), [geo, entries])
+  const journeyCoords = useMemo(() => journey.map((s) => [s.lon, s.lat] as [number, number]), [journey])
+  // Arcos por tramo (un tramo puede partirse en dos al cruzar el antimeridiano).
+  const allArcsByLeg = useMemo(
+    () => journeyCoords.slice(1).map((c, i) => journeyArcs([journeyCoords[i], c])),
+    [journeyCoords],
+  )
+  const allArcs = useMemo(() => allArcsByLeg.flat(), [allArcsByLeg])
+  const tripJourney = useMemo(
+    () => (tripId ? buildJourney(geo, entries, (_e, r) => r.tripId === tripId) : null),
+    [geo, entries, tripId],
+  )
+
+  const lines = useMemo<MapLines | null>(() => {
+    if (replay) {
+      const i = Math.floor(replay.t)
+      const arcs = allArcsByLeg.slice(0, i).flat()
+      const partial = replay.t > i && i < journeyCoords.length - 1 ? journeyArcs(journeyCoords.slice(i, i + 2), replay.t - i) : []
+      const headSeg = partial.at(-1)
+      return {
+        arcs: [...arcs, ...partial],
+        stops: journeyCoords.slice(0, i + 1),
+        head: headSeg ? headSeg[headSeg.length - 1] : journeyCoords[i],
+        fitKey: 'replay',
+        fitCoords: journeyCoords,
+      }
+    }
+    if (tripJourney) {
+      const coords = tripJourney.map((s) => [s.lon, s.lat] as [number, number])
+      return { arcs: journeyArcs(coords), stops: coords, fitKey: `trip:${tripId}`, fitCoords: coords }
+    }
+    if (showLines) return { arcs: allArcs, stops: journeyCoords, fitKey: null }
+    return null
+  }, [replay, allArcs, allArcsByLeg, journeyCoords, tripJourney, tripId, showLines])
+
+  // Durante la repetición el mapa solo pinta lo visitado hasta la fecha actual.
+  const replayDate = replay ? journey[Math.floor(replay.t)]?.date ?? null : null
+  const replayEntries = useMemo(() => (replayDate ? entriesUntil(entries, replayDate) : null), [entries, replayDate])
+  const replaySummaries = useMemo(() => (replayEntries ? summarizeCountries(geo, replayEntries) : null), [geo, replayEntries])
+  const replayCountries = replaySummaries
+    ? [...replaySummaries.values()].filter((s) => s.status && BEEN_STATUSES.has(s.status) && s.country.kind === 'country').length
+    : 0
+
+  const startReplay = () => {
+    closeTrip()
+    setReplay({ t: 0, playing: true, speed: 1 })
+  }
+  function closeTrip() {
     const next = new URLSearchParams(params)
     next.delete('viaje')
     next.delete('p')
@@ -91,7 +143,7 @@ export function MapPage() {
   const beenCountries = been.filter((s) => s.country.kind === 'country').length
 
   return (
-    <div className="map-page">
+    <div className={replay ? 'map-page map-page--replay' : 'map-page'}>
       <aside className="map-page__side">
         <div className="map-page__search">
           <SearchBox geo={geo} entries={entries} onPick={(p) => open(p)} />
@@ -147,6 +199,28 @@ export function MapPage() {
               <StatCard label="Países ONU" value={`${beenCountries}/193`} meta={formatPercent((beenCountries / 193) * 100) + ' del mundo'} />
               <StatCard label="Lugares" value={entries.filter((e) => e.type !== 'country' && e.type !== 'region').length} meta="ciudades y lugares" />
             </div>
+            <div className="map-page__journey">
+              <button type="button" className="btn btn--ink" disabled={journey.length < 2} onClick={startReplay}>
+                ▶ Repetir mis viajes
+              </button>
+              <label className="map-page__toggle">
+                <button
+                  type="button"
+                  className="toggle"
+                  role="switch"
+                  aria-checked={showLines}
+                  aria-label="Mostrar líneas de viaje"
+                  onClick={() => {
+                    setShowLines(!showLines)
+                    writePref('lines', !showLines)
+                  }}
+                />
+                <span className="mono">Líneas de viaje</span>
+              </label>
+              {journey.length < 2 && (
+                <p className="mono muted map-page__hint">Añade fechas a dos o más lugares para ver tus líneas de viaje.</p>
+              )}
+            </div>
             <p className="mono muted map-page__hint">
               {readOnly ? 'Toca un país para ver detalles.' : 'Busca un lugar o toca un país en el mapa para añadirlo.'}
             </p>
@@ -157,15 +231,26 @@ export function MapPage() {
       <section className="map-page__map" aria-label="Mapa">
         <MapView
           geo={geo}
-          entries={entries}
-          summaries={summaries}
-          selectedCountry={current?.countryId ?? null}
+          entries={replayEntries ?? entries}
+          summaries={replaySummaries ?? summaries}
+          selectedCountry={replay ? null : current?.countryId ?? null}
           focus={focus}
           onSelect={onSelect}
           picking={!!pickCountry}
           onPickLocation={onPickLocation}
-          route={route}
+          lines={lines}
+          replaying={!!replay}
         />
+        {replay && (
+          <ReplayBar
+            geo={geo}
+            stops={journey}
+            state={replay}
+            countriesSoFar={replayCountries}
+            onChange={setReplay}
+            onClose={() => setReplay(null)}
+          />
+        )}
       </section>
     </div>
   )
@@ -193,4 +278,30 @@ async function regionAt(countryId: string, lon: number, lat: number): Promise<st
   const fc = await loadAdmin1(countryId)
   const f = fc?.features.find((x) => booleanPointInPolygon([lon, lat], x))
   return f?.properties.id ?? null
+}
+
+/** Entradas recortadas a las fechas que empiezan en o antes de `date` (solo las que tienen fechas). */
+function entriesUntil(entries: Entry[], date: string): Entry[] {
+  const out: Entry[] = []
+  for (const e of entries) {
+    const dates = e.dates.filter((d) => d.start <= date)
+    if (dates.length) out.push({ ...e, dates })
+  }
+  return out
+}
+
+function readPref(key: string): boolean {
+  try {
+    return localStorage.getItem(`wm:${key}`) === '1'
+  } catch {
+    return false
+  }
+}
+
+function writePref(key: string, value: boolean) {
+  try {
+    localStorage.setItem(`wm:${key}`, value ? '1' : '0')
+  } catch {
+    // almacenamiento no disponible (modo privado): la preferencia no se recuerda
+  }
 }

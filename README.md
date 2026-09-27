@@ -21,7 +21,8 @@ npm run dev                  # http://localhost:5173
 ```
 
 Los datos del emulador se guardan en `.emulator-data/` al cerrar. Crea una cuenta cualquiera desde la
-pantalla de login: solo existe en el emulador.
+pantalla de login: solo existe en el emulador. Para tener un historial de ejemplo (Europa, Japón, EE. UU.,
+México, Perú…) en esa cuenta: `node scripts/seed-emulator.mjs`.
 
 ## Datos geográficos
 
@@ -48,6 +49,10 @@ npm run build:data   # simplifica y escribe public/data/
 - % del país = área de las regiones visitadas / área total, salvo override manual en la entrada del país.
 - **Viajes** (`users/{uid}/trips/{id}`): nombre + descripción. Cada rango de fechas de una entrada puede apuntar a un viaje
   (`dates[].tripId`); el itinerario, las fechas y los días del viaje se derivan de ahí. Borrar un viaje conserva las fechas.
+- **Líneas de viaje y repetición**: paradas Vivido/Visitado/Escala ordenadas por fecha (`src/lib/journey.ts`), unidas
+  con arcos de círculo máximo cortados en el antimeridiano. La repetición pinta el mapa solo con lo visitado hasta cada fecha.
+- **Logros** (`src/lib/achievements.ts`): 30 logros en 6 grupos, evaluados en orden cronológico para fechar el desbloqueo.
+  El ícono sigue la serie de íconos wxlter: la banda amarilla sube con el progreso.
 - **Links de solo lectura**: `shares/{token}` → `{ uid, displayName }`. Con `users/{uid}.sharing.enabled = true` las reglas
   permiten leer el perfil, entradas, viajes y fotos de ese usuario sin sesión. Regenerar el link invalida el anterior;
   desactivarlo corta toda lectura pública. El perfil público no debe contener datos privados (no se guarda el correo).

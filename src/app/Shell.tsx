@@ -1,11 +1,14 @@
 import { NavLink, Outlet } from 'react-router-dom'
+import { AchievementToaster } from '../components/Achievements'
 import { Symbol } from '../components/ui'
+import { useAchievements } from '../lib/achievements'
 import { useAppData } from './AppData'
 import './Shell.css'
 
 /** shareName definido = vista compartida de solo lectura. */
 export function Shell({ shareName }: { shareName?: string }) {
-  const { basePath } = useAppData()
+  const { basePath, geo, entries, loading } = useAppData()
+  const achievements = useAchievements(geo, entries)
   const home = basePath || '/'
   const shared = shareName !== undefined
   return (
@@ -32,6 +35,7 @@ export function Shell({ shareName }: { shareName?: string }) {
       <main className="shell__main">
         <Outlet />
       </main>
+      {!shared && !loading && <AchievementToaster achievements={achievements} />}
     </div>
   )
 }

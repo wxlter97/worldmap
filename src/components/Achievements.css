@@ -1,0 +1,146 @@
+.band-icon {
+  position: relative;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  background: var(--ink);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.band-icon__band {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--brand-faro);
+}
+
+.band-icon__glyph {
+  position: relative;
+  font-family: var(--font-display);
+  letter-spacing: -0.04em;
+  line-height: 1;
+  color: var(--brand-faro);
+  mix-blend-mode: difference;
+}
+
+.achievements {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-8);
+}
+
+.achievements__group h3 {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-3);
+  font-size: var(--fs-20);
+  padding-bottom: var(--sp-2);
+  margin-bottom: var(--sp-4);
+  border-bottom: var(--border);
+}
+
+.achievements__grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--sp-3);
+}
+
+.ach {
+  display: flex;
+  gap: var(--sp-3);
+  align-items: center;
+  padding: 10px;
+  border: 2px solid var(--ash);
+  background: var(--white);
+}
+
+.ach--done {
+  border-color: var(--ink);
+}
+
+.ach__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.ach__text strong {
+  font-weight: 700;
+}
+
+.ach__desc {
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--ink-soft);
+}
+
+.ach:not(.ach--done) .ach__text strong,
+.ach:not(.ach--done) .ach__desc {
+  color: var(--smoke);
+}
+
+.ach__meta {
+  margin-top: 4px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* Aviso de logro nuevo */
+.toasts {
+  position: fixed;
+  z-index: 50;
+  left: 50%;
+  bottom: var(--sp-6);
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  width: min(420px, calc(100vw - 32px));
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: 10px;
+  border: var(--border);
+  background: var(--ink);
+  color: var(--on-ink);
+}
+
+.toast__text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.toast__text .label {
+  color: var(--brand-faro);
+}
+
+.toast__text strong {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 20px;
+  letter-spacing: -0.02em;
+}
+
+.toast button {
+  border: 0;
+  background: none;
+  color: var(--on-ink);
+  font-size: 18px;
+  width: 36px;
+  height: 36px;
+  cursor: pointer;
+}
+
+.toast button:hover {
+  color: var(--brand-faro);
+}

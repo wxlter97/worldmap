@@ -24,6 +24,10 @@
   font-size: var(--fs-11);
 }
 
+.map-legend[hidden] {
+  display: none;
+}
+
 .map-legend span {
   display: inline-flex;
   align-items: center;
@@ -61,6 +65,16 @@
   position: absolute;
   top: var(--sp-3);
   right: var(--sp-3);
+}
+
+.map-wrap--replay .maplibregl-ctrl-bottom-right {
+  margin-bottom: 76px;
+}
+
+@media (max-width: 700px) {
+  .map-wrap--replay .maplibregl-ctrl-bottom-right {
+    margin-bottom: 120px;
+  }
 }
 
 /* Controles de MapLibre con el lenguaje del sistema */

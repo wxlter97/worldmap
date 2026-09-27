@@ -59,20 +59,6 @@ export function summarizeTrip(geo: Geo, trip: Trip, entries: Entry[]): TripSumma
   }
 }
 
-/** Puntos de la ruta: se omiten los países cuando hay paradas más precisas dentro de ellos. */
-export function routeCoords(stops: TripStop[]): [number, number][] {
-  const precise = new Set(stops.filter((s) => s.entry.type !== 'country').map((s) => s.entry.countryId))
-  const coords: [number, number][] = []
-  for (const s of stops) {
-    if (s.lon == null || s.lat == null) continue
-    if (s.entry.type === 'country' && precise.has(s.entry.countryId)) continue
-    const last = coords.at(-1)
-    if (last && last[0] === s.lon && last[1] === s.lat) continue
-    coords.push([s.lon, s.lat])
-  }
-  return coords
-}
-
 export function formatTripRange(start: string | null, end: string | null): string {
   if (!start) return 'Sin fechas'
   const fmt = (s: string, withYear: boolean) =>

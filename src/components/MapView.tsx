@@ -24,8 +24,19 @@ interface Props {
   /** Modo "marcar lugar propio": el siguiente clic devuelve la coordenada. */
   picking?: boolean
   onPickLocation?: (lon: number, lat: number, countryId: string | null) => void
-  /** Ruta de un viaje: se dibuja en orden y la cámara la encuadra. */
-  route?: [number, number][] | null
+  /** Líneas de viaje (arcos ya calculados), paradas y marcador animado. */
+  lines?: MapLines | null
+  /** Repetición en curso: oculta la leyenda y deja sitio a la barra de reproducción. */
+  replaying?: boolean
+}
+
+export interface MapLines {
+  arcs: [number, number][][]
+  stops: [number, number][]
+  head?: [number, number] | null // posición actual en la repetición
+  /** Cambia cuando la cámara debe re-encuadrar (p. ej. al abrir otro viaje). null = no mover. */
+  fitKey?: string | null
+  fitCoords?: [number, number][]
 }
 
 maplibregl.setWorkerUrl(workerUrl)
@@ -54,7 +65,7 @@ function makePattern(kind: 'hatch-faro' | 'hatch-ink' | 'dots'): ImageData {
   return ctx.getImageData(0, 0, size, size)
 }
 
-export function MapView({ geo, entries, summaries, selectedCountry, focus, onSelect, picking = false, onPickLocation, route = null }: Props) {
+export function MapView({ geo, entries, summaries, selectedCountry, focus, onSelect, picking = false, onPickLocation, lines = null, replaying = false }: Props) {
   const container = useRef<HTMLDivElement>(null)
   const mapRef = useRef<maplibregl.Map | null>(null)
   const [ready, setReady] = useState(false)
@@ -98,6 +109,7 @@ export function MapView({ geo, entries, summaries, selectedCountry, focus, onSel
       map.addSource('regions', { type: 'geojson', data: emptyFc(), promoteId: 'id' })
       map.addSource('points', { type: 'geojson', data: emptyFc() })
       map.addSource('route', { type: 'geojson', data: emptyFc() })
+      map.addSource('route-head', { type: 'geojson', data: emptyFc() })
 
       map.addLayer({
         id: 'country-fill',
@@ -152,7 +164,7 @@ export function MapView({ geo, entries, summaries, selectedCountry, focus, onSel
         id: 'route-line',
         type: 'line',
         source: 'route',
-        filter: ['==', ['geometry-type'], 'LineString'],
+        filter: ['in', ['geometry-type'], ['literal', ['LineString', 'MultiLineString']]],
         layout: { 'line-join': 'miter', 'line-cap': 'butt' },
         paint: { 'line-color': C.ink, 'line-width': 2.5, 'line-dasharray': [2, 1.5] },
       })
@@ -161,7 +173,13 @@ export function MapView({ geo, entries, summaries, selectedCountry, focus, onSel
         type: 'circle',
         source: 'route',
         filter: ['==', ['geometry-type'], 'Point'],
-        paint: { 'circle-radius': 5, 'circle-color': C.faro, 'circle-stroke-color': C.ink, 'circle-stroke-width': 2.5 },
+        paint: { 'circle-radius': 4, 'circle-color': C.faro, 'circle-stroke-color': C.ink, 'circle-stroke-width': 2 },
+      })
+      map.addLayer({
+        id: 'route-head',
+        type: 'circle',
+        source: 'route-head',
+        paint: { 'circle-radius': 8, 'circle-color': C.ink, 'circle-stroke-color': C.faro, 'circle-stroke-width': 3 },
       })
       map.addLayer({
         id: 'points',
@@ -280,23 +298,44 @@ export function MapView({ geo, entries, summaries, selectedCountry, focus, onSel
     if (ready && focus) mapRef.current!.flyTo({ center: [focus.lon, focus.lat], zoom: focus.zoom, duration: 900 })
   }, [ready, focus])
 
-  // --- Ruta de viaje ---
-  const routeKey = route?.map((c) => c.join(',')).join(';') ?? ''
+  // --- Líneas de viaje ---
   useEffect(() => {
     if (!ready) return
     const map = mapRef.current!
-    const coords = route ?? []
-    const features: Feature[] = coords.map((c) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: c }, properties: {} }))
-    if (coords.length > 1) features.push({ type: 'Feature', geometry: { type: 'LineString', coordinates: coords }, properties: {} })
+    const features: Feature[] = (lines?.stops ?? []).map((c) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: c }, properties: {} }))
+    if (lines?.arcs.length) features.push({ type: 'Feature', geometry: { type: 'MultiLineString', coordinates: lines.arcs }, properties: {} })
     ;(map.getSource('route') as GeoJSONSource).setData({ type: 'FeatureCollection', features })
+    const head: Feature[] = lines?.head ? [{ type: 'Feature', geometry: { type: 'Point', coordinates: lines.head }, properties: {} }] : []
+    ;(map.getSource('route-head') as GeoJSONSource).setData({ type: 'FeatureCollection', features: head })
+  }, [ready, lines])
+
+  // Durante la repetición, si el marcador sale del encuadre la cámara lo sigue.
+  const head = lines?.head ?? null
+  useEffect(() => {
+    if (!ready || !head) return
+    const map = mapRef.current!
+    if (map.isMoving()) return
+    const canvas = map.getCanvas()
+    const margin = 40
+    const p = map.project(head)
+    const barHeight = 150 // la barra de reproducción tapa el pie del mapa
+    const inside = p.x > margin && p.y > margin && p.x < canvas.clientWidth - margin && p.y < canvas.clientHeight - barHeight
+    if (!inside) map.easeTo({ center: head, offset: [0, -barHeight / 3], duration: 700 })
+  }, [ready, head])
+
+  const fitKey = lines?.fitKey ?? null
+  useEffect(() => {
+    if (!ready || !fitKey) return
+    const map = mapRef.current!
+    const coords = lines?.fitCoords ?? []
     if (coords.length === 1) map.flyTo({ center: coords[0], zoom: 5, duration: 900 })
     else if (coords.length > 1) {
       const bounds = coords.reduce((b, c) => b.extend(c), new maplibregl.LngLatBounds(coords[0], coords[0]))
       map.fitBounds(bounds, { padding: 60, maxZoom: 5.5, duration: 900 })
     }
-    // routeKey resume el contenido de la ruta.
+    // Solo cuando cambia la clave de encuadre.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ready, routeKey])
+  }, [ready, fitKey])
 
   useEffect(() => {
     if (ready) mapRef.current!.setProjection({ type: globe ? 'globe' : 'mercator' })
@@ -307,9 +346,9 @@ export function MapView({ geo, entries, summaries, selectedCountry, focus, onSel
   }, [ready, picking])
 
   return (
-    <div className="map-wrap">
+    <div className={replaying ? 'map-wrap map-wrap--replay' : 'map-wrap'}>
       <div ref={container} className="map" />
-      <div className="map-legend" aria-label="Leyenda">
+      <div className="map-legend" aria-label="Leyenda" hidden={replaying}>
         <span><i className="sw sw--lived" />Vivido</span>
         <span><i className="sw sw--visited" />Visitado</span>
         <span><i className="sw sw--transit" />Escala</span>
