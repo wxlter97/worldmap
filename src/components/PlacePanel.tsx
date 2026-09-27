@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { deleteEntry, saveEntry } from '../lib/data'
+import { deleteEntry, removePhoto, saveEntry } from '../lib/data'
 import { CONTINENTS, type Geo } from '../lib/geo'
 import {
   PLACE_TYPE_LABEL,
@@ -15,7 +15,8 @@ import {
 } from '../lib/model'
 import type { Place } from '../lib/search'
 import { combineWith, useGazetteer } from '../lib/suggestions'
-import { EntryEditor, PhotoPreview } from './EntryEditor'
+import { EntryEditor } from './EntryEditor'
+import { PhotoGallery, entryPhotos } from './Photos'
 import { SuggestionList } from './Suggestions'
 import { SearchBox } from './SearchBox'
 import { Markdown, Meter, Stars, formatNumber, formatPercent } from './ui'
@@ -135,6 +136,7 @@ export function PlacePanel({ uid, geo, place, entries, trips, summaries, onOpen,
               setEditing(null)
             }}
             onDelete={() => {
+              for (const path of entryPhotos(editing)) void removePhoto(path)
               void deleteEntry(uid!, key)
               setEditing(null)
             }}
@@ -219,7 +221,7 @@ function EntryView({ entry, trips, onEdit }: { entry: Entry; trips: Trip[]; onEd
         <Stars value={entry.rating} />
         {onEdit && <button type="button" className="btn btn--small panel__edit" onClick={onEdit}>Editar</button>}
       </div>
-      {entry.photoPath && <PhotoPreview path={entry.photoPath} />}
+      <PhotoGallery photos={entryPhotos(entry)} title={entry.name} />
       {entry.dates.length > 0 && (
         <div>
           <h3 className="label">Fechas · {totalDays} días</h3>

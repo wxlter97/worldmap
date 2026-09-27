@@ -9,7 +9,7 @@ export const QUICK_STATUSES: Status[] = ['visited', 'lived', 'wishlist']
 
 /** Una entrada de país sin nada más que el estado: se puede quitar sin perder información. */
 const isBare = (e: Entry) =>
-  e.dates.length === 0 && !e.description && !e.photoPath && !(e.photos?.length) && e.tags.length === 0 && !e.rating && !e.people && e.percentOverride == null
+  e.dates.length === 0 && !e.description && !e.photoPath && !e.photos?.length && e.tags.length === 0 && !e.rating && !e.people && e.percentOverride == null
 
 export type ToggleResult = 'added' | 'removed' | 'updated' | 'kept'
 

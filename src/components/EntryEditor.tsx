@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
-import { newTrip, photoUrl, removePhoto, saveTrip, uploadPhoto } from '../lib/data'
+import { useState } from 'react'
+import { newTrip, removePhoto, saveTrip, uploadPhoto } from '../lib/data'
+import { MAX_PHOTOS, PhotoThumb, entryPhotos } from './Photos'
 import { STATUSES, STATUS_LABEL, formatRange, rangeDays, type DateRange, type Entry, type Trip } from '../lib/model'
 import { Markdown } from './ui'
 import './EntryEditor.css'
@@ -27,6 +28,9 @@ export function EntryEditor({ uid, entry, isNew, trips, defaultTripId = null, on
   const [rangeError, setRangeError] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
   const [photoError, setPhotoError] = useState<string | null>(null)
+  const [photos, setPhotos] = useState<string[]>(() => entryPhotos(entry))
+  // Subidas de esta edición: si se cancela, se borran para no dejar fotos huérfanas.
+  const [uploaded, setUploaded] = useState<string[]>([])
 
   const set = <K extends keyof Entry>(k: K, v: Entry[K]) => setDraft((d) => ({ ...d, [k]: v }))
 
@@ -40,25 +44,41 @@ export function EntryEditor({ uid, entry, isNew, trips, defaultTripId = null, on
     setRangeError(null)
   }
 
-  const onPhoto = async (file: File | undefined) => {
-    if (!file) return
+  const onPhotos = async (files: FileList | null) => {
+    if (!files?.length) return
+    const room = MAX_PHOTOS - photos.length
+    const list = [...files].slice(0, room)
+    setPhotoError(files.length > room ? `Máximo ${MAX_PHOTOS} fotos por lugar: se subirán solo ${room}.` : null)
     setUploading(true)
-    setPhotoError(null)
-    try {
-      const path = await uploadPhoto(uid, file)
-      if (draft.photoPath) void removePhoto(draft.photoPath)
-      set('photoPath', path)
-    } catch {
-      setPhotoError('No se pudo subir la foto. Revisa tu conexión y que sea una imagen (JPG, PNG, HEIC, WebP).')
-    } finally {
-      setUploading(false)
+    let failed = 0
+    for (const file of list) {
+      try {
+        const path = await uploadPhoto(uid, file)
+        setPhotos((p) => [...p, path])
+        setUploaded((u) => [...u, path])
+      } catch {
+        failed++
+      }
     }
+    if (failed) setPhotoError(`No se ${failed === 1 ? 'pudo subir 1 foto' : `pudieron subir ${failed} fotos`}. Revisa tu conexión y que sean imágenes (JPG, PNG, HEIC, WebP).`)
+    setUploading(false)
+  }
+
+  const removeAt = (i: number) => setPhotos((p) => p.filter((_, j) => j !== i))
+  const makeCover = (i: number) => setPhotos((p) => [p[i], ...p.filter((_, j) => j !== i)])
+
+  const cancel = () => {
+    for (const path of uploaded) void removePhoto(path)
+    onCancel()
   }
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault()
     const tags = [...new Set(tagsText.split(',').map((t) => t.trim().toLowerCase()).filter(Boolean))]
-    onSave({ ...draft, tags })
+    // Las fotos quitadas de la entrada se borran del almacenamiento.
+    for (const path of entryPhotos(entry)) if (!photos.includes(path)) void removePhoto(path)
+    for (const path of uploaded) if (!photos.includes(path)) void removePhoto(path)
+    onSave({ ...draft, tags, photos, photoPath: photos[0] ?? null })
   }
 
   return (
@@ -212,23 +232,46 @@ export function EntryEditor({ uid, entry, isNew, trips, defaultTripId = null, on
       )}
 
       <section className="editor__section">
-        <h3 className="label">Foto</h3>
-        {draft.photoPath && <PhotoPreview path={draft.photoPath} />}
+        <h3 className="label">Fotos · {photos.length}/{MAX_PHOTOS}</h3>
+        {photos.length > 0 && (
+          <ul className="photo-grid" role="list">
+            {photos.map((path, i) => (
+              <li key={path} className="photo-cell">
+                <PhotoThumb path={path} />
+                <div className="photo-cell__actions">
+                  {i === 0 ? (
+                    <button type="button" className="photo-cell__cover" disabled>Portada</button>
+                  ) : (
+                    <button type="button" onClick={() => makeCover(i)} aria-label={`Usar foto ${i + 1} como portada`}>★</button>
+                  )}
+                  <button type="button" onClick={() => removeAt(i)} aria-label={`Quitar foto ${i + 1}`}>Quitar</button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
         <div className="editor__row">
-          <label className="btn">
-            {uploading ? 'Subiendo…' : draft.photoPath ? 'Cambiar foto' : 'Subir foto'}
-            <input type="file" accept="image/*" className="visually-hidden" disabled={uploading} onChange={(e) => onPhoto(e.target.files?.[0])} />
+          <label className={photos.length >= MAX_PHOTOS ? 'btn btn--disabled' : 'btn'} aria-disabled={uploading || photos.length >= MAX_PHOTOS}>
+            {uploading ? 'Subiendo…' : photos.length ? 'Añadir fotos' : 'Subir fotos'}
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              className="visually-hidden"
+              disabled={uploading || photos.length >= MAX_PHOTOS}
+              onChange={(e) => {
+                void onPhotos(e.target.files)
+                e.target.value = ''
+              }}
+            />
           </label>
-          {draft.photoPath && (
-            <button type="button" className="link-btn" onClick={() => set('photoPath', null)}>Quitar foto</button>
-          )}
         </div>
         {photoError && <p className="field-error">{photoError}</p>}
       </section>
 
       <div className="editor__actions">
         <button type="submit" className="btn btn--primary" disabled={uploading}>{isNew ? 'Guardar' : 'Guardar cambios'}</button>
-        <button type="button" className="btn" onClick={onCancel}>Cancelar</button>
+        <button type="button" className="btn" disabled={uploading} onClick={cancel}>Cancelar</button>
         {!isNew && (
           <button
             type="button"
@@ -245,14 +288,3 @@ export function EntryEditor({ uid, entry, isNew, trips, defaultTripId = null, on
   )
 }
 
-export function PhotoPreview({ path }: { path: string }) {
-  const [url, setUrl] = useState<string | null>(null)
-  useEffect(() => {
-    let alive = true
-    photoUrl(path).then((u) => alive && setUrl(u)).catch(() => alive && setUrl(null))
-    return () => {
-      alive = false
-    }
-  }, [path])
-  return <div className="photo">{url ? <img src={url} alt="" loading="lazy" /> : <span className="mono muted">Cargando foto…</span>}</div>
-}

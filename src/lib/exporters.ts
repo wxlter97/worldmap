@@ -24,7 +24,7 @@ const csvCell = (v: unknown) => {
 /** Una fila por rango de fechas (o una sola fila si el lugar no tiene fechas). BOM para que Excel lea UTF-8. */
 export function entriesToCsv(geo: Geo, entries: Entry[], trips: Trip[]): Blob {
   const tripName = new Map(trips.map((t) => [t.id, t.name]))
-  const header = ['tipo', 'nombre', 'pais', 'region', 'continente', 'estado', 'desde', 'hasta', 'dias', 'viaje', 'etiquetas', 'valoracion', 'con_quien', 'descripcion', 'lat', 'lon', 'clave']
+  const header = ['tipo', 'nombre', 'pais', 'region', 'continente', 'estado', 'desde', 'hasta', 'dias', 'viaje', 'etiquetas', 'valoracion', 'con_quien', 'descripcion', 'fotos', 'lat', 'lon', 'clave']
   const rows = [header]
   const sorted = [...entries].sort((a, b) => (a.dates[0]?.start ?? '9').localeCompare(b.dates[0]?.start ?? '9') || a.name.localeCompare(b.name, 'es'))
   for (const e of sorted) {
@@ -33,7 +33,7 @@ export function entriesToCsv(geo: Geo, entries: Entry[], trips: Trip[]): Blob {
       PLACE_TYPE_LABEL[e.type], e.name, country?.name ?? e.countryId, e.regionId ? geo.regions[e.regionId]?.name ?? '' : '',
       country ? CONTINENTS[country.continent] : '', STATUS_LABEL[e.status],
     ]
-    const tail = [e.tags.join(', '), e.rating ?? '', e.people, e.description, e.lat ?? '', e.lon ?? '', e.key]
+    const tail = [e.tags.join(', '), e.rating ?? '', e.people, e.description, e.photos?.length ?? (e.photoPath ? 1 : 0), e.lat ?? '', e.lon ?? '', e.key]
     if (e.dates.length === 0) rows.push([...base, '', '', '', '', ...tail].map(String))
     for (const r of e.dates) {
       rows.push([...base, r.start, r.end || r.start, String(rangeDays(r)), r.tripId ? tripName.get(r.tripId) ?? '' : '', ...tail].map(String))
