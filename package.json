@@ -15,6 +15,7 @@
     "test:rules": "firebase emulators:exec --only firestore,storage --project demo-rules 'vitest run --project rules'"
   },
   "dependencies": {
+    "@resvg/resvg-js": "^2.6.2",
     "dompurify": "^3.4.16",
     "firebase": "^12.19.0",
     "fuse.js": "^7.5.0",
@@ -22,7 +23,8 @@
     "marked": "^18.0.14",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "react-router-dom": "^7.18.4"
+    "react-router-dom": "^7.18.4",
+    "satori": "^0.33.5"
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^5.0.2",

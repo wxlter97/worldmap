@@ -1,5 +1,13 @@
 {
-  "rewrites": [{ "source": "/((?!data/|assets/|icons/|sw.js|workbox-).*)", "destination": "/index.html" }],
+  "functions": {
+    "api/og.ts": { "includeFiles": "api/_lib/fonts/**", "maxDuration": 15 },
+    "api/share-page.ts": { "maxDuration": 10 }
+  },
+  "rewrites": [
+    { "source": "/s/:token", "destination": "/api/share-page?t=:token" },
+    { "source": "/s/:token/:rest*", "destination": "/api/share-page?t=:token" },
+    { "source": "/((?!api/|data/|assets/|icons/|sw.js|workbox-).*)", "destination": "/index.html" }
+  ],
   "headers": [
     {
       "source": "/data/(.*)",

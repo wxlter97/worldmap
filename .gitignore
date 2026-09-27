@@ -32,3 +32,4 @@ data-raw/
 scripts/emulator-test-user.json
 firestore-debug.log
 storage-debug.log
+og-preview.png
