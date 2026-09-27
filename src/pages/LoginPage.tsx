@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { authErrorMessage } from '../lib/auth'
 import { auth, usingEmulators } from '../lib/firebase'
 import { Symbol } from '../components/ui'
+import { getLang, setLang, t } from '../lib/i18n'
 import './LoginPage.css'
 
 type Mode = 'signin' | 'signup' | 'reset'
@@ -23,7 +24,7 @@ export function LoginPage() {
     try {
       if (mode === 'reset') {
         await sendPasswordResetEmail(auth, email)
-        setInfo('Te enviamos un correo para restablecer la contraseña. Revisa también la carpeta de spam.')
+        setInfo(t('Te enviamos un correo para restablecer la contraseña. Revisa también la carpeta de spam.'))
       } else if (mode === 'signup') {
         const cred = await createUserWithEmailAndPassword(auth, email, password)
         void sendEmailVerification(cred.user).catch(() => undefined)
@@ -42,27 +43,27 @@ export function LoginPage() {
       <section className="login__brand on-faro">
         <div className="login__lockup">
           <Symbol size={56} />
-          <span className="login__wordmark">wxlter<span>.</span></span>
+          <span className="login__wordmark">wxlter<span className="wordmark-dot">.</span></span>
         </div>
-        <p className="label">Mapa de viajes</p>
-        <h1 className="login__title">Cada país, cada ciudad, cada fecha.</h1>
+        <p className="label">{t('Mapa de viajes')}</p>
+        <h1 className="login__title">{t('Cada país, cada ciudad, cada fecha.')}</h1>
       </section>
 
       <section className="login__form-wrap">
         <form className="login__form" onSubmit={submit} noValidate>
           <div className="tabs" role="tablist">
-            <button type="button" role="tab" aria-selected={mode === 'signin'} onClick={() => setMode('signin')}>Entrar</button>
-            <button type="button" role="tab" aria-selected={mode === 'signup'} onClick={() => setMode('signup')}>Crear cuenta</button>
+            <button type="button" role="tab" aria-selected={mode === 'signin'} onClick={() => setMode('signin')}>{t('Entrar')}</button>
+            <button type="button" role="tab" aria-selected={mode === 'signup'} onClick={() => setMode('signup')}>{t('Crear cuenta')}</button>
           </div>
 
           <label className={`field ${error ? 'field--error' : ''}`}>
-            <span>Correo</span>
+            <span>{t('Correo')}</span>
             <input type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
           </label>
 
           {mode !== 'reset' && (
             <label className={`field ${error ? 'field--error' : ''}`}>
-              <span>Contraseña</span>
+              <span>{t('Contraseña')}</span>
               <input
                 type="password"
                 autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
@@ -78,19 +79,22 @@ export function LoginPage() {
           {info && <p className="notice" role="status">{info}</p>}
 
           <button type="submit" className="btn btn--primary" disabled={busy}>
-            {busy ? 'Un momento…' : mode === 'signin' ? 'Entrar' : mode === 'signup' ? 'Crear cuenta' : 'Enviar correo'}
+            {busy ? t('Un momento…') : mode === 'signin' ? t('Entrar') : mode === 'signup' ? t('Crear cuenta') : t('Enviar correo')}
           </button>
 
           {mode === 'signin' && (
-            <button type="button" className="link-btn" onClick={() => setMode('reset')}>Olvidé mi contraseña</button>
+            <button type="button" className="link-btn" onClick={() => setMode('reset')}>{t('Olvidé mi contraseña')}</button>
           )}
           {mode === 'reset' && (
-            <button type="button" className="link-btn" onClick={() => setMode('signin')}>Volver a entrar</button>
+            <button type="button" className="link-btn" onClick={() => setMode('signin')}>{t('Volver a entrar')}</button>
           )}
           <p className="mono muted login__env">
-            <a href="/privacidad">Privacidad</a>
+            <a href="/privacidad">{t('Privacidad')}</a>{' · '}
+            <button type="button" className="link-btn" onClick={() => setLang(getLang() === 'es' ? 'en' : 'es')}>
+              {getLang() === 'es' ? 'English' : 'Español'}
+            </button>
           </p>
-          {usingEmulators && <p className="mono muted login__env">Modo local · emuladores de Firebase</p>}
+          {usingEmulators && <p className="mono muted login__env">{t('Modo local · emuladores de Firebase')}</p>}
         </form>
       </section>
     </main>

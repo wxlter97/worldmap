@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { changePassword, deleteAccount, sendVerification } from '../lib/account'
 import { authErrorMessage, useAuth } from '../lib/auth'
+import { t } from '../lib/i18n'
 
 export function EmailVerification() {
   const { user } = useAuth()
@@ -11,15 +12,14 @@ export function EmailVerification() {
   return (
     <section className="account-section">
       <div className="account-row account-row--between">
-        <h2>Correo</h2>
-        {user.emailVerified ? <span className="badge badge--ink">Verificado</span> : <span className="badge">Sin verificar</span>}
+        <h2>{t('Correo')}</h2>
+        {user.emailVerified ? <span className="badge badge--ink">{t('Verificado')}</span> : <span className="badge">{t('Sin verificar')}</span>}
       </div>
       <p className="account-copy mono">{user.email}</p>
       {!user.emailVerified && (
         <>
           <p className="account-copy">
-            Verificar tu correo te permite recuperar la cuenta si olvidas la contraseña. Después de hacer clic en el
-            enlace del correo, recarga esta página.
+            {t('Verificar tu correo te permite recuperar la cuenta si olvidas la contraseña. Después de hacer clic en el enlace del correo, recarga esta página.')}
           </p>
           <button
             type="button"
@@ -27,7 +27,7 @@ export function EmailVerification() {
             disabled={sent}
             onClick={() => sendVerification(user).then(() => setSent(true), (e) => setError(authErrorMessage(e)))}
           >
-            {sent ? 'Correo enviado' : 'Enviar correo de verificación'}
+            {sent ? t('Correo enviado') : t('Enviar correo de verificación')}
           </button>
           {error && <p className="field-error" role="alert">{error}</p>}
         </>
@@ -49,7 +49,7 @@ export function ChangePassword() {
     e.preventDefault()
     setError(null)
     setDone(false)
-    if (next.length < 6) return setError('La contraseña nueva es muy corta. Usa al menos 6 caracteres.')
+    if (next.length < 6) return setError(t('La contraseña nueva es muy corta. Usa al menos 6 caracteres.'))
     setBusy(true)
     try {
       await changePassword(user, current, next)
@@ -65,27 +65,27 @@ export function ChangePassword() {
 
   return (
     <section className="account-section">
-      <h2>Contraseña</h2>
+      <h2>{t('Contraseña')}</h2>
       <form className="account-form" onSubmit={submit}>
         <label className="field">
-          <span>Contraseña actual</span>
+          <span>{t('Contraseña actual')}</span>
           <input type="password" autoComplete="current-password" required value={current} onChange={(e) => setCurrent(e.target.value)} />
         </label>
         <label className={`field ${error ? 'field--error' : ''}`}>
-          <span>Contraseña nueva</span>
+          <span>{t('Contraseña nueva')}</span>
           <input type="password" autoComplete="new-password" minLength={6} required value={next} onChange={(e) => setNext(e.target.value)} />
         </label>
         {error && <p className="field-error" role="alert">{error}</p>}
-        {done && <p className="notice" role="status">Contraseña actualizada.</p>}
+        {done && <p className="notice" role="status">{t('Contraseña actualizada.')}</p>}
         <button type="submit" className="btn account-link-btn" disabled={busy || !current || !next}>
-          {busy ? 'Guardando…' : 'Cambiar contraseña'}
+          {busy ? t('Guardando…') : t('Cambiar contraseña')}
         </button>
       </form>
     </section>
   )
 }
 
-const CONFIRM_WORD = 'ELIMINAR'
+const confirmWord = () => t('ELIMINAR')
 
 export function DeleteAccount() {
   const { user } = useAuth()
@@ -108,7 +108,7 @@ export function DeleteAccount() {
       setError(
         code.startsWith('auth/')
           ? authErrorMessage(err)
-          : `No se pudo terminar (${progress ?? 'inicio'}). Revisa tu conexión e inténtalo otra vez: lo ya borrado no vuelve.`,
+          : t('No se pudo terminar ({step}). Revisa tu conexión e inténtalo otra vez: lo ya borrado no vuelve.', { step: progress ?? t('inicio') }),
       )
       setProgress(null)
     }
@@ -116,32 +116,32 @@ export function DeleteAccount() {
 
   return (
     <section className="account-section account-danger">
-      <h2>Eliminar cuenta</h2>
+      <h2>{t('Eliminar cuenta')}</h2>
       <p className="account-copy">
-        Borra para siempre tu mapa: lugares, viajes, fotos, links compartidos y la cuenta. No se puede deshacer.{' '}
-        <Link to="/exportar">Descarga una copia JSON</Link> antes si quieres conservar tus datos.
+        {t('Borra para siempre tu mapa: lugares, viajes, fotos, links compartidos y la cuenta. No se puede deshacer.')}{' '}
+        <Link to="/exportar">{t('Descarga una copia JSON')}</Link> {t('antes si quieres conservar tus datos.')}
       </p>
       {!open ? (
         <button type="button" className="btn btn--danger account-link-btn" onClick={() => setOpen(true)}>
-          Eliminar mi cuenta…
+          {t('Eliminar mi cuenta…')}
         </button>
       ) : (
         <form className="account-form" onSubmit={submit}>
           <label className="field">
-            <span>Escribe {CONFIRM_WORD} para confirmar</span>
+            <span>{t('Escribe {word} para confirmar', { word: confirmWord() })}</span>
             <input value={word} autoComplete="off" onChange={(e) => setWord(e.target.value)} />
           </label>
           <label className={`field ${error ? 'field--error' : ''}`}>
-            <span>Tu contraseña</span>
+            <span>{t('Tu contraseña')}</span>
             <input type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} />
           </label>
           {error && <p className="field-error" role="alert">{error}</p>}
           {progress && <p className="notice notice--error" role="status">{progress}</p>}
           <div className="account-row">
-            <button type="submit" className="btn btn--danger" disabled={word !== CONFIRM_WORD || !password || !!progress}>
-              Eliminar todo
+            <button type="submit" className="btn btn--danger" disabled={word !== confirmWord() || !password || !!progress}>
+              {t('Eliminar todo')}
             </button>
-            <button type="button" className="btn" disabled={!!progress} onClick={() => setOpen(false)}>Cancelar</button>
+            <button type="button" className="btn" disabled={!!progress} onClick={() => setOpen(false)}>{t('Cancelar')}</button>
           </div>
         </form>
       )}

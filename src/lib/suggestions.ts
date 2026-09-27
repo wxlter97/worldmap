@@ -4,6 +4,7 @@ import { ACHIEVEMENTS, REGION_SETS } from './achievements'
 import { loadCities, loadLandmarks, type CityRow, type Geo, type LandmarkRow } from './geo'
 import { BEEN_STATUSES, type CountrySummary, type Entry } from './model'
 import type { Place } from './search'
+import { locale, t } from './i18n'
 
 export interface Gazetteer {
   cities: CityRow[]
@@ -65,10 +66,10 @@ export function combineWith(geo: Geo, target: Entry, entries: Entry[], summaries
       .filter((l) => l[2] === target.countryId && !known.has(`landmark:${l[0]}`))
       .sort((a, b) => Number(b[6] === 'wonder') - Number(a[6] === 'wonder'))
       .slice(0, 3)
-    for (const l of sites) out.push({ place: landmarkPlace(l), reason: l[6] === 'wonder' ? 'Maravilla del mundo' : 'Patrimonio UNESCO' })
+    for (const l of sites) out.push({ place: landmarkPlace(l), reason: l[6] === 'wonder' ? t('Maravilla del mundo') : t('Patrimonio UNESCO') })
     // cities.json viene ordenado por población.
     const cities = gz.cities.filter((c) => c[2] === target.countryId && !known.has(`city:${c[0]}`)).slice(0, 3)
-    for (const c of cities) out.push({ place: cityPlace(c), reason: c[7] ? 'Capital' : `${(c[6] / 1e6).toLocaleString('es', { maximumFractionDigits: 1 })} M hab.` })
+    for (const c of cities) out.push({ place: cityPlace(c), reason: c[7] ? t('Capital') : t('{n} M hab.', { n: (c[6] / 1e6).toLocaleString(locale(), { maximumFractionDigits: 1 }) }) })
   } else {
     const here: [number, number] = [target.lon, target.lat]
     const near = <T,>(rows: T[], coords: (r: T) => [number, number], keep: (r: T) => boolean) =>
@@ -78,19 +79,19 @@ export function combineWith(geo: Geo, target: Entry, entries: Entry[], summaries
         .filter((x) => x.d <= NEARBY_KM && x.d > 1)
         .sort((a, b) => a.d - b.d)
     for (const { r, d } of near(gz.landmarks, (l) => [l[4], l[5]], (l) => !known.has(`landmark:${l[0]}`)).slice(0, 3)) {
-      out.push({ place: landmarkPlace(r), reason: `UNESCO · a ${Math.round(d)} km`, distanceKm: d })
+      out.push({ place: landmarkPlace(r), reason: `UNESCO · ${t('a {n} km', { n: Math.round(d) })}`, distanceKm: d })
     }
     const cities = near(gz.cities, (c) => [c[4], c[5]], (c) => c[6] >= MIN_CITY_POP && !known.has(`city:${c[0]}`))
       .filter((x) => x.d >= MIN_CITY_KM)
       .slice(0, 3)
-    for (const { r, d } of cities) out.push({ place: cityPlace(r), reason: `a ${Math.round(d)} km`, distanceKm: d })
+    for (const { r, d } of cities) out.push({ place: cityPlace(r), reason: t('a {n} km', { n: Math.round(d) }), distanceKm: d })
   }
 
   for (const n of country?.neighbours ?? []) {
     const s = summaries.get(n)
     if (s?.status && BEEN_STATUSES.has(s.status)) continue
     if (known.has(`country:${n}`)) continue
-    out.push({ place: countryAsPlace(geo, n), reason: `Frontera con ${country.name}` })
+    out.push({ place: countryAsPlace(geo, n), reason: t('Frontera con {country}', { country: country.name }) })
     if (out.length >= limit + 2) break
   }
   return out.slice(0, limit)
@@ -133,9 +134,9 @@ export function ideas(geo: Geo, entries: Entry[], summaries: Map<string, Country
     .slice(0, 8)
   if (gaps.length) {
     out.push({
-      title: 'Cerca de lo que conoces',
-      description: 'Países que limitan con los que ya visitaste.',
-      suggestions: gaps.map(([id, via]) => ({ place: countryAsPlace(geo, id), reason: `Vecino de ${listEs(via)}` })).filter(fresh),
+      title: t('Cerca de lo que conoces'),
+      description: t('Países que limitan con los que ya visitaste.'),
+      suggestions: gaps.map(([id, via]) => ({ place: countryAsPlace(geo, id), reason: t('Vecino de {countries}', { countries: listEs(via) }) })).filter(fresh),
     })
   }
 
@@ -146,12 +147,12 @@ export function ideas(geo: Geo, entries: Entry[], summaries: Map<string, Country
     const def = ACHIEVEMENTS.find((a) => a.id === achId)!
     const missing = members.filter((m) => !been.has(m)).sort((a, b) => closeness(a) - closeness(b))
     out.push({
-      title: `Para «${def.title}»`,
+      title: t('Para «{title}»', { title: t(def.title) }),
       description:
         missing.length > MAX
-          ? `${done} de ${members.length}. Te faltan ${missing.length}; estos son los más cercanos a donde ya estuviste:`
-          : `${done} de ${members.length}. Te faltan:`,
-      suggestions: missing.slice(0, MAX).map((m) => ({ place: countryAsPlace(geo, m), reason: def.title })).filter(fresh),
+          ? t('{done} de {total}. Te faltan {missing}; estos son los más cercanos a donde ya estuviste:', { done, total: members.length, missing: missing.length })
+          : t('{done} de {total}. Te faltan:', { done, total: members.length }),
+      suggestions: missing.slice(0, MAX).map((m) => ({ place: countryAsPlace(geo, m), reason: t(def.title) })).filter(fresh),
     })
   }
 
@@ -160,8 +161,8 @@ export function ideas(geo: Geo, entries: Entry[], summaries: Map<string, Country
   const seen = wonders.filter((l) => entries.some((e) => e.key === `landmark:${l[0]}` && BEEN_STATUSES.has(e.status)))
   if (seen.length > 0 && seen.length < wonders.length) {
     out.push({
-      title: 'Las 7 maravillas',
-      description: `${seen.length} de 7. Te faltan:`,
+      title: t('Las 7 maravillas'),
+      description: t('{done} de {total}. Te faltan:', { done: seen.length, total: 7 }),
       suggestions: wonders
         .filter((l) => !seen.includes(l))
         .map((l) => ({ place: landmarkPlace(l), reason: geo.countries[l[2]]?.name ?? '' }))
@@ -173,6 +174,6 @@ export function ideas(geo: Geo, entries: Entry[], summaries: Map<string, Country
 
 function listEs(items: string[]): string {
   if (items.length <= 1) return items.join('')
-  if (items.length > 3) return `${items.slice(0, 2).join(', ')} y ${items.length - 2} más`
-  return `${items.slice(0, -1).join(', ')} y ${items.at(-1)}`
+  if (items.length > 3) return t('{list} y {n} más', { list: items.slice(0, 2).join(', '), n: items.length - 2 })
+  return t('{list} y {last}', { list: items.slice(0, -1).join(', '), last: items.at(-1)! })
 }

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { photoUrl } from '../lib/data'
 import type { Entry } from '../lib/model'
+import { t } from '../lib/i18n'
 import './Photos.css'
 
 export const MAX_PHOTOS = 12
@@ -23,9 +24,9 @@ function usePhotoUrl(path: string) {
 
 export function PhotoThumb({ path, onClick, label }: { path: string; onClick?: () => void; label?: string }) {
   const { url, failed } = usePhotoUrl(path)
-  const content = url ? <img src={url} alt="" loading="lazy" /> : <span className="mono muted">{failed ? 'No disponible' : '…'}</span>
+  const content = url ? <img src={url} alt="" loading="lazy" /> : <span className="mono muted">{failed ? t('No disponible') : '…'}</span>
   return onClick ? (
-    <button type="button" className="thumb" onClick={onClick} aria-label={label ?? 'Ver foto'}>
+    <button type="button" className="thumb" onClick={onClick} aria-label={label ?? t('Ver foto')}>
       {content}
     </button>
   ) : (
@@ -41,7 +42,7 @@ export function PhotoGallery({ photos, title }: { photos: string[]; title: strin
     <>
       <div className={photos.length === 1 ? 'gallery gallery--single' : 'gallery'}>
         {photos.map((p, i) => (
-          <PhotoThumb key={p} path={p} onClick={() => setOpen(i)} label={`Ver foto ${i + 1} de ${photos.length}`} />
+          <PhotoThumb key={p} path={p} onClick={() => setOpen(i)} label={t('Ver foto {n} de {total}', { n: i + 1, total: photos.length })} />
         ))}
       </div>
       {open != null && <Lightbox photos={photos} index={open} title={title} onIndex={setOpen} onClose={() => setOpen(null)} />}
@@ -69,20 +70,20 @@ function Lightbox({ photos, index, title, onIndex, onClose }: { photos: string[]
   }, [go, onClose])
 
   return (
-    <div className="lightbox" role="dialog" aria-modal="true" aria-label={`Fotos de ${title}`} onClick={onClose}>
+    <div className="lightbox" role="dialog" aria-modal="true" aria-label={t('Fotos de {title}', { title })} onClick={onClose}>
       <div className="lightbox__bar" onClick={(e) => e.stopPropagation()}>
         <span className="mono">
           {title} · {index + 1}/{photos.length}
         </span>
-        <button type="button" autoFocus aria-label="Cerrar" onClick={onClose}>×</button>
+        <button type="button" autoFocus aria-label={t('Cerrar')} onClick={onClose}>×</button>
       </div>
       <div className="lightbox__stage">
-        {url ? <img src={url} alt={`${title}, foto ${index + 1}`} onClick={(e) => e.stopPropagation()} /> : <span className="mono">Cargando…</span>}
+        {url ? <img src={url} alt={t('{title}, foto {n}', { title, n: index + 1 })} onClick={(e) => e.stopPropagation()} /> : <span className="mono">{t('Cargando…')}</span>}
       </div>
       {photos.length > 1 && (
         <>
-          <button type="button" className="lightbox__nav lightbox__nav--prev" aria-label="Foto anterior" onClick={(e) => (e.stopPropagation(), go(-1))}>←</button>
-          <button type="button" className="lightbox__nav lightbox__nav--next" aria-label="Foto siguiente" onClick={(e) => (e.stopPropagation(), go(1))}>→</button>
+          <button type="button" className="lightbox__nav lightbox__nav--prev" aria-label={t('Foto anterior')} onClick={(e) => (e.stopPropagation(), go(-1))}>←</button>
+          <button type="button" className="lightbox__nav lightbox__nav--next" aria-label={t('Foto siguiente')} onClick={(e) => (e.stopPropagation(), go(1))}>→</button>
         </>
       )}
     </div>

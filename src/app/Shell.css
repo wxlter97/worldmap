@@ -76,9 +76,22 @@
 }
 
 .shell__readonly {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--sp-3);
   background: var(--inv-bg);
   color: var(--inv-fg);
   padding: 6px var(--sp-8);
+}
+
+.shell__lang {
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
 }
 
 .shell__main {

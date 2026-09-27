@@ -1,6 +1,7 @@
 import DOMPurify from 'dompurify'
 import { marked } from 'marked'
 import { useMemo } from 'react'
+import { locale, t } from '../lib/i18n'
 
 /** Símbolo wxlter: W de trazo continuo en un cuadrado. */
 export function Symbol({ size = 34, inverted = false }: { size?: number; inverted?: boolean }) {
@@ -26,7 +27,7 @@ export function Markdown({ source }: { source: string }) {
 export function Stars({ value }: { value: number | null }) {
   if (!value) return null
   return (
-    <span className="mono" aria-label={`${value} de 5`}>
+    <span className="mono" aria-label={t('{n} de 5', { n: value })}>
       {'■'.repeat(value)}
       <span className="muted">{'□'.repeat(5 - value)}</span>
     </span>
@@ -54,4 +55,4 @@ export function Meter({ percent, label }: { percent: number; label: string }) {
 }
 
 export const formatPercent = (p: number) => (p > 0 && p < 1 ? '<1%' : `${Math.round(p)}%`)
-export const formatNumber = (n: number) => n.toLocaleString('es')
+export const formatNumber = (n: number) => n.toLocaleString(locale())

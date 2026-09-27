@@ -16,6 +16,7 @@ import { BEEN_STATUSES, summarizeCountries, type Entry, type Status } from '../l
 import type { Place } from '../lib/search'
 import { useGazetteer, type Gazetteer } from '../lib/suggestions'
 import { summarizeTrip } from '../lib/trips'
+import { t } from '../lib/i18n'
 import './MapPage.css'
 
 const zoomFor = (p: Place) => (p.type === 'country' ? 4 : p.type === 'region' ? 5.5 : 7)
@@ -127,7 +128,7 @@ export function MapPage() {
       const id = s.type === 'country' ? s.id : s.type === 'region' ? s.countryId : null
       if (id && uid && !readOnly) {
         const r = toggleCountry(uid, geo, entries, id, quick)
-        setQuickMsg(r === 'kept' ? `${geo.countries[id]?.name} tiene fechas o notas: ábrelo desde el mapa normal para quitarlo.` : null)
+        setQuickMsg(r === 'kept' ? t('{country} tiene fechas o notas: ábrelo desde el mapa normal para quitarlo.', { country: geo.countries[id]?.name ?? id }) : null)
       }
       return
     }
@@ -170,20 +171,20 @@ export function MapPage() {
 
         {pickCountry && (
           <div className="notice map-page__notice" role="status">
-            Toca el mapa donde está el lugar.{' '}
-            <button type="button" className="link-btn" onClick={() => setPickCountry(null)}>Cancelar</button>
+            {t('Toca el mapa donde está el lugar.')}{' '}
+            <button type="button" className="link-btn" onClick={() => setPickCountry(null)}>{t('Cancelar')}</button>
           </div>
         )}
 
         {pending && (
           <form className="map-page__pending" onSubmit={createCustom}>
             <label className="field">
-              <span>Nombre del lugar en {geo.countries[pending.countryId]?.name}</span>
-              <input autoFocus value={pendingName} onChange={(e) => setPendingName(e.target.value)} placeholder="Mirador, restaurante, playa…" />
+              <span>{t('Nombre del lugar en {country}', { country: geo.countries[pending.countryId]?.name ?? '' })}</span>
+              <input autoFocus value={pendingName} onChange={(e) => setPendingName(e.target.value)} placeholder={t('Mirador, restaurante, playa…')} />
             </label>
             <div className="map-page__pending-actions">
-              <button type="submit" className="btn btn--primary" disabled={!pendingName.trim()}>Continuar</button>
-              <button type="button" className="btn" onClick={() => setPending(null)}>Cancelar</button>
+              <button type="submit" className="btn btn--primary" disabled={!pendingName.trim()}>{t('Continuar')}</button>
+              <button type="button" className="btn" onClick={() => setPending(null)}>{t('Cancelar')}</button>
             </div>
           </form>
         )}
@@ -212,7 +213,7 @@ export function MapPage() {
             summaries={summaries}
             onOpen={(p) => open(p)}
             onClose={() => open(null)}
-            closeLabel={tripSummary ? `Volver a ${tripSummary.trip.name}` : undefined}
+            closeLabel={tripSummary ? t('Volver a {trip}', { trip: tripSummary.trip.name }) : undefined}
             defaultTripId={tripSummary?.trip.id ?? null}
             basePath={basePath}
             onStartPick={readOnly ? undefined : (id) => setPickCountry(id)}
@@ -230,8 +231,8 @@ export function MapPage() {
         ) : (
           <div className="map-page__overview">
             <div className="map-page__stats">
-              <StatCard label="Países ONU" value={`${beenCountries}/193`} meta={formatPercent((beenCountries / 193) * 100) + ' del mundo'} />
-              <StatCard label="Lugares" value={entries.filter((e) => e.type !== 'country' && e.type !== 'region').length} meta="ciudades y lugares" />
+              <StatCard label={t('Países ONU')} value={`${beenCountries}/193`} meta={t('{p} del mundo', { p: formatPercent((beenCountries / 193) * 100) })} />
+              <StatCard label={t('Lugares')} value={entries.filter((e) => e.type !== 'country' && e.type !== 'region').length} meta={t('ciudades y lugares')} />
             </div>
             <div className="map-page__journey">
               <div className="map-page__actions">
@@ -244,11 +245,11 @@ export function MapPage() {
                       setQuick('visited')
                     }}
                   >
-                    Marcado rápido
+                    {t('Marcado rápido')}
                   </button>
                 )}
                 <button type="button" className="btn btn--ink" disabled={journey.length < 2} onClick={startReplay}>
-                  ▶ Repetir mis viajes
+                  ▶ {t('Repetir mis viajes')}
                 </button>
               </div>
               <label className="map-page__toggle">
@@ -257,26 +258,26 @@ export function MapPage() {
                   className="toggle"
                   role="switch"
                   aria-checked={showLines}
-                  aria-label="Mostrar líneas de viaje"
+                  aria-label={t('Mostrar líneas de viaje')}
                   onClick={() => {
                     setShowLines(!showLines)
                     writePref('lines', !showLines)
                   }}
                 />
-                <span className="mono">Líneas de viaje</span>
+                <span className="mono">{t('Líneas de viaje')}</span>
               </label>
               {journey.length < 2 && (
-                <p className="mono muted map-page__hint">Añade fechas a dos o más lugares para ver tus líneas de viaje.</p>
+                <p className="mono muted map-page__hint">{t('Añade fechas a dos o más lugares para ver tus líneas de viaje.')}</p>
               )}
             </div>
             <p className="mono muted map-page__hint">
-              {readOnly ? 'Toca un país para ver detalles.' : 'Busca un lugar o toca un país en el mapa para añadirlo.'}
+              {readOnly ? t('Toca un país para ver detalles.') : t('Busca un lugar o toca un país en el mapa para añadirlo.')}
             </p>
           </div>
         )}
       </aside>
 
-      <section className="map-page__map" aria-label="Mapa">
+      <section className="map-page__map" aria-label={t('Mapa')}>
         <MapView
           geo={geo}
           entries={replayEntries ?? entries}

@@ -10,6 +10,7 @@ import {
 import { collection, doc, getDoc, getDocs, writeBatch } from 'firebase/firestore'
 import { deleteObject, listAll, ref } from 'firebase/storage'
 import { db, storage } from './firebase'
+import { t } from './i18n'
 
 /** Firebase exige haber iniciado sesión hace poco para operaciones sensibles: se pide la contraseña actual. */
 async function reauth(user: User, password: string) {
@@ -30,11 +31,11 @@ export async function deleteAccount(user: User, password: string, onProgress?: (
   await reauth(user, password)
   const uid = user.uid
 
-  onProgress?.('Borrando fotos…')
+  onProgress?.(t('Borrando fotos…'))
   const photos = await listAll(ref(storage, `users/${uid}/photos`)).catch(() => null)
   await Promise.all((photos?.items ?? []).map((item) => deleteObject(item).catch(() => undefined)))
 
-  onProgress?.('Borrando lugares y viajes…')
+  onProgress?.(t('Borrando lugares y viajes…'))
   for (const name of ['entries', 'trips', 'notes']) {
     const snap = await getDocs(collection(db, 'users', uid, name))
     for (let i = 0; i < snap.docs.length; i += 400) {
@@ -44,7 +45,7 @@ export async function deleteAccount(user: User, password: string, onProgress?: (
     }
   }
 
-  onProgress?.('Borrando perfil…')
+  onProgress?.(t('Borrando perfil…'))
   const profile = await getDoc(doc(db, 'users', uid))
   const batch = writeBatch(db)
   const token = profile.data()?.sharing?.token as string | undefined
@@ -53,6 +54,6 @@ export async function deleteAccount(user: User, password: string, onProgress?: (
   batch.delete(doc(db, 'users', uid))
   await batch.commit()
 
-  onProgress?.('Cerrando la cuenta…')
+  onProgress?.(t('Cerrando la cuenta…'))
   await deleteUser(user)
 }

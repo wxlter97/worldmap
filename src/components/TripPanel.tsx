@@ -7,6 +7,7 @@ import type { Place } from '../lib/search'
 import { formatTripRange, type TripSummary } from '../lib/trips'
 import { entryPlace } from './PlacePanel'
 import { Markdown } from './ui'
+import { t, tn } from '../lib/i18n'
 import './PlacePanel.css'
 
 interface Props {
@@ -36,20 +37,20 @@ export function TripPanel({ uid, geo, summary, entries, onOpen, onClose, onDelet
       <header className="panel__head">
         <div className="panel__title">
           <div>
-            <p className="label muted">Viaje · {formatTripRange(summary.start, summary.end)}</p>
+            <p className="label muted">{t('Viaje')} · {formatTripRange(summary.start, summary.end)}</p>
             <h2 id="trip-title">{trip.name}</h2>
             <p className="panel__crumbs">{summary.countryIds.map((id) => flagEmoji(geo.countries[id]?.iso2 ?? null)).join(' ')}</p>
           </div>
         </div>
-        <button type="button" className="icon-btn" aria-label="Cerrar viaje" onClick={onClose}>×</button>
+        <button type="button" className="icon-btn" aria-label={t('Cerrar viaje')} onClick={onClose}>×</button>
       </header>
 
       <section className="panel__section">
         <div className="panel__row mono panel__small">
-          <span className="badge badge--ink">{summary.days} días</span>
-          <span className="badge">{summary.countryIds.length} países</span>
-          <span className="badge">{stops.length} paradas</span>
-          {uid && !editing && <button type="button" className="btn btn--small panel__edit" onClick={startEdit}>Editar</button>}
+          <span className="badge badge--ink">{tn(summary.days, '{n} día', '{n} días')}</span>
+          <span className="badge">{tn(summary.countryIds.length, '{n} país', '{n} países')}</span>
+          <span className="badge">{tn(stops.length, '{n} parada', '{n} paradas')}</span>
+          {uid && !editing && <button type="button" className="btn btn--small panel__edit" onClick={startEdit}>{t('Editar')}</button>}
         </div>
 
         {editing ? (
@@ -63,26 +64,26 @@ export function TripPanel({ uid, geo, summary, entries, onOpen, onClose, onDelet
             }}
           >
             <label className="field">
-              <span>Nombre</span>
+              <span>{t('Nombre')}</span>
               <input value={name} maxLength={80} onChange={(e) => setName(e.target.value)} />
             </label>
             <label className="field">
-              <span>Descripción (markdown)</span>
+              <span>{t('Descripción (markdown)')}</span>
               <textarea value={description} maxLength={20000} onChange={(e) => setDescription(e.target.value)} />
             </label>
             <div className="editor__actions">
-              <button type="submit" className="btn btn--primary" disabled={!name.trim()}>Guardar</button>
-              <button type="button" className="btn" onClick={() => setEditing(false)}>Cancelar</button>
+              <button type="submit" className="btn btn--primary" disabled={!name.trim()}>{t('Guardar')}</button>
+              <button type="button" className="btn" onClick={() => setEditing(false)}>{t('Cancelar')}</button>
               <button
                 type="button"
                 className="btn btn--danger"
                 onClick={() => {
-                  if (!confirm(`¿Eliminar el viaje «${trip.name}»? Las fechas de sus lugares se conservan, sin viaje.`)) return
+                  if (!confirm(t('¿Eliminar el viaje «{name}»? Las fechas de sus lugares se conservan, sin viaje.', { name: trip.name }))) return
                   void deleteTrip(uid!, trip.id, entries)
                   onDeleted()
                 }}
               >
-                Eliminar viaje
+                {t('Eliminar viaje')}
               </button>
             </div>
           </form>
@@ -94,10 +95,10 @@ export function TripPanel({ uid, geo, summary, entries, onOpen, onClose, onDelet
       {uid && <TripShare uid={uid} summary={summary} entries={entries} />}
 
       <section className="panel__section">
-        <h3 className="panel__h3">Itinerario</h3>
+        <h3 className="panel__h3">{t('Itinerario')}</h3>
         {stops.length === 0 ? (
           <p className="mono muted panel__small">
-            Sin paradas. Abre un lugar, añade una fecha y elige «{trip.name}» en el campo Viaje.
+            {t('Sin paradas. Abre un lugar, añade una fecha y elige «{name}» en el campo Viaje.', { name: trip.name })}
           </p>
         ) : (
           <ol className="itinerary">
@@ -137,7 +138,7 @@ function TripShare({ uid, summary, entries }: { uid: string; summary: TripSummar
     try {
       await fn()
     } catch {
-      setError('No se pudo actualizar el link. Revisa tu conexión: compartir necesita estar en línea.')
+      setError(t('No se pudo actualizar el link. Revisa tu conexión: compartir necesita estar en línea.'))
     } finally {
       setBusy(false)
     }
@@ -145,15 +146,15 @@ function TripShare({ uid, summary, entries }: { uid: string; summary: TripSummar
 
   return (
     <section className="panel__section">
-      <h3 className="panel__h3">Compartir este viaje</h3>
+      <h3 className="panel__h3">{t('Compartir este viaje')}</h3>
       <p className="panel__small muted">
-        Un link que muestra solo este viaje: sus lugares, fechas y fotos.{' '}
-        {profile.sharing.showNotes ? 'Incluye notas y personas.' : 'Sin notas ni personas (cámbialo en Cuenta).'}
+        {t('Un link que muestra solo este viaje: sus lugares, fechas y fotos.')}{' '}
+        {profile.sharing.showNotes ? t('Incluye notas y personas.') : t('Sin notas ni personas (cámbialo en Cuenta).')}
       </p>
       {link ? (
         <>
           <div className="panel__share">
-            <input className="input" readOnly value={link} aria-label="Link del viaje" onFocus={(e) => e.target.select()} />
+            <input className="input" readOnly value={link} aria-label={t('Link del viaje')} onFocus={(e) => e.target.select()} />
             <button
               type="button"
               className="btn btn--primary"
@@ -162,16 +163,16 @@ function TripShare({ uid, summary, entries }: { uid: string; summary: TripSummar
                 setTimeout(() => setCopied(false), 2000)
               })}
             >
-              {copied ? 'Copiado' : 'Copiar'}
+              {copied ? t('Copiado') : t('Copiar')}
             </button>
           </div>
           <button type="button" className="link-btn" disabled={busy} onClick={() => run(() => disableTripShare(uid, summary.trip.id, profile))}>
-            Dejar de compartir
+            {t('Dejar de compartir')}
           </button>
         </>
       ) : (
         <button type="button" className="btn" disabled={busy} onClick={() => run(() => enableTripShare(uid, summary.trip, entries, profile))}>
-          {busy ? 'Creando…' : 'Crear link del viaje'}
+          {busy ? t('Creando…') : t('Crear link del viaje')}
         </button>
       )}
       {error && <p className="field-error" role="alert">{error}</p>}

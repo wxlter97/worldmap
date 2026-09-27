@@ -3,6 +3,7 @@ import type { MultiPolygon, Polygon, Position } from 'geojson'
 import { loadAdmin1, type Geo } from './geo'
 import { BEEN_STATUSES, type CountrySummary } from './model'
 import type { Stats } from './stats'
+import { t, tn } from './i18n'
 
 export type PosterTheme = 'papel' | 'negro' | 'amarillo' | 'raspar'
 
@@ -106,24 +107,24 @@ export async function renderPoster(canvas: HTMLCanvasElement, input: PosterInput
   ctx.font = `700 ${20 * s}px "JetBrains Mono", monospace`
   setSpacing(ctx, 0.14 * 20 * s)
   ctx.textBaseline = 'top'
-  ctx.fillText(`MAPA DE VIAJES${input.name ? ` · ${input.name.toUpperCase()}` : ''}`, pad, y)
+  ctx.fillText(`${t('MAPA DE VIAJES')}${input.name ? ` · ${input.name.toUpperCase()}` : ''}`, pad, y)
   y += 48 * s
 
   ctx.fillStyle = P.accent
   const headSize = (format.height / format.width > 1.6 ? 170 : 150) * s
   ctx.font = `400 ${headSize}px "Archivo Black", "Arial Black", sans-serif`
   setSpacing(ctx, -0.04 * headSize)
-  ctx.fillText(`${stats.unCountries} ${stats.unCountries === 1 ? 'país' : 'países'}`, pad - 6 * s, y)
+  ctx.fillText(tn(stats.unCountries, '{n} país', '{n} países'), pad - 6 * s, y)
   y += headSize * 0.92
 
   ctx.fillStyle = P.text
   ctx.font = `500 ${32 * s}px "Archivo", sans-serif`
   setSpacing(ctx, 0)
   const sub = [
-    `${stats.continentsBeen} ${stats.continentsBeen === 1 ? 'continente' : 'continentes'}`,
-    `${stats.cities} ${stats.cities === 1 ? 'ciudad' : 'ciudades'}`,
-    stats.totalDays ? `${stats.totalDays.toLocaleString('es')} días` : null,
-    `${Math.round((stats.unCountries / 193) * 100)}% del mundo`,
+    tn(stats.continentsBeen, '{n} continente', '{n} continentes'),
+    tn(stats.cities, '{n} ciudad', '{n} ciudades'),
+    stats.totalDays ? tn(stats.totalDays, '{n} día', '{n} días') : null,
+    t('{p} del mundo', { p: `${Math.round((stats.unCountries / 193) * 100)}%` }),
   ].filter(Boolean).join('  ·  ')
   ctx.fillText(sub, pad, y + 12 * s)
   y += 80 * s
@@ -233,7 +234,7 @@ export async function renderPoster(canvas: HTMLCanvasElement, input: PosterInput
     ctx.font = `700 ${18 * s}px "JetBrains Mono", monospace`
     setSpacing(ctx, 0.14 * 18 * s)
     ctx.textBaseline = 'top'
-    ctx.fillText(`${names.length} PAÍSES Y TERRITORIOS`, pad, ly)
+    ctx.fillText(t('{n} PAÍSES Y TERRITORIOS', { n: names.length }), pad, ly)
     ly += 44 * s
     ctx.fillStyle = P.text
     const size = 30 * s
@@ -281,7 +282,7 @@ function wrapList(ctx: CanvasRenderingContext2D, names: string[], width: number,
     }
     if (lines.length === maxLines - 1) {
       let last = current
-      const more = (n: number) => ` · +${n} más`
+      const more = (n: number) => ` · ${t('+{n} más', { n })}`
       while (last.includes(' · ') && ctx.measureText(last + more(names.length - i)).width > width) {
         last = last.slice(0, last.lastIndexOf(' · '))
         i--

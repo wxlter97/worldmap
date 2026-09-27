@@ -4,6 +4,7 @@ import type { Geo } from '../lib/geo'
 import { mapLink } from '../lib/links'
 import { PLACE_TYPE_LABEL, emptyEntry, flagEmoji } from '../lib/model'
 import type { Suggestion } from '../lib/suggestions'
+import { t } from '../lib/i18n'
 import './Suggestions.css'
 
 interface Props {
@@ -15,7 +16,7 @@ interface Props {
 
 /** Lista de sugerencias: el nombre abre el lugar en el mapa; «+» lo añade a «Quiero ir». */
 export function SuggestionList({ geo, suggestions, basePath, uid }: Props) {
-  if (!suggestions.length) return <p className="mono muted sugg-empty">Nada que sugerir por ahora.</p>
+  if (!suggestions.length) return <p className="mono muted sugg-empty">{t('Nada que sugerir por ahora.')}</p>
   return (
     <ul className="sugg">
       {suggestions.map(({ place, reason }) => (
@@ -31,8 +32,8 @@ export function SuggestionList({ geo, suggestions, basePath, uid }: Props) {
             <button
               type="button"
               className="sugg__add"
-              aria-label={`Añadir ${place.name} a Quiero ir`}
-              title="Añadir a Quiero ir"
+              aria-label={t('Añadir {name} a Quiero ir', { name: place.name })}
+              title={t('Añadir a Quiero ir')}
               onClick={() => {
                 const entry = emptyEntry(place.type, place.id, {
                   name: place.name, countryId: place.countryId, regionId: place.regionId, lon: place.lon, lat: place.lat,

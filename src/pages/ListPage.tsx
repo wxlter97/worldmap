@@ -7,6 +7,7 @@ import { CONTINENTS, type ContinentId } from '../lib/geo'
 import { PLACE_TYPE_LABEL, STATUSES, STATUS_LABEL, flagEmoji, formatRange, type PlaceType, type Status } from '../lib/model'
 import { mapLink } from '../lib/links'
 import { searchEntries } from '../lib/search'
+import { t } from '../lib/i18n'
 import './ListPage.css'
 
 type Sort = 'recent' | 'name' | 'date' | 'rating'
@@ -51,13 +52,13 @@ export function ListPage() {
   return (
     <div className="list-page">
       <div className="list-page__head">
-        <h1>Mis lugares</h1>
-        <span className="label muted">{results.length} de {entries.length}</span>
+        <h1>{t('Mis lugares')}</h1>
+        <span className="label muted">{t('{n} de {total}', { n: results.length, total: entries.length })}</span>
       </div>
 
       <div className="tabs" role="tablist">
-        <button type="button" role="tab" aria-selected={view === 'lista'} onClick={() => setParams({})}>Lista</button>
-        <button type="button" role="tab" aria-selected={view === 'tiempo'} onClick={() => setParams({ vista: 'tiempo' })}>Línea de tiempo</button>
+        <button type="button" role="tab" aria-selected={view === 'lista'} onClick={() => setParams({})}>{t('Lista')}</button>
+        <button type="button" role="tab" aria-selected={view === 'tiempo'} onClick={() => setParams({ vista: 'tiempo' })}>{t('Línea de tiempo')}</button>
       </div>
 
       {view === 'tiempo' ? (
@@ -67,61 +68,61 @@ export function ListPage() {
 
           <div className="list-page__filters">
             <label className="field list-page__q">
-              <span>Buscar</span>
-              <input type="search" value={query} placeholder="Nombre, descripción, etiqueta, persona…" onChange={(e) => setQuery(e.target.value)} />
+              <span>{t('Buscar')}</span>
+              <input type="search" value={query} placeholder={t('Nombre, descripción, etiqueta, persona…')} onChange={(e) => setQuery(e.target.value)} />
             </label>
             <label className="field">
-              <span>Estado</span>
+              <span>{t('Estado')}</span>
               <select value={status} onChange={(e) => setStatus(e.target.value as Status | '')}>
-                <option value="">Todos</option>
+                <option value="">{t('Todos')}</option>
                 {STATUSES.map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
               </select>
             </label>
             <label className="field">
-              <span>Tipo</span>
+              <span>{t('Tipo')}</span>
               <select value={type} onChange={(e) => setType(e.target.value as PlaceType | '')}>
-                <option value="">Todos</option>
+                <option value="">{t('Todos')}</option>
                 {(Object.keys(PLACE_TYPE_LABEL) as PlaceType[]).map((t) => <option key={t} value={t}>{PLACE_TYPE_LABEL[t]}</option>)}
               </select>
             </label>
             <label className="field">
-              <span>Continente</span>
+              <span>{t('Continente')}</span>
               <select value={continent} onChange={(e) => setContinent(e.target.value as ContinentId | '')}>
-                <option value="">Todos</option>
+                <option value="">{t('Todos')}</option>
                 {(Object.keys(CONTINENTS) as ContinentId[]).map((c) => <option key={c} value={c}>{CONTINENTS[c]}</option>)}
               </select>
             </label>
             <label className="field">
-              <span>Año</span>
+              <span>{t('Año')}</span>
               <select value={year} onChange={(e) => setYear(e.target.value)}>
-                <option value="">Todos</option>
+                <option value="">{t('Todos')}</option>
                 {years.map((y) => <option key={y} value={y}>{y}</option>)}
               </select>
             </label>
             {tags.length > 0 && (
               <label className="field">
-                <span>Etiqueta</span>
+                <span>{t('Etiqueta')}</span>
                 <select value={tag} onChange={(e) => setTag(e.target.value)}>
-                  <option value="">Todas</option>
+                  <option value="">{t('Todas')}</option>
                   {tags.map((t) => <option key={t} value={t}>#{t}</option>)}
                 </select>
               </label>
             )}
             <label className="field">
-              <span>Orden</span>
+              <span>{t('Orden')}</span>
               <select value={sort} onChange={(e) => setSort(e.target.value as Sort)}>
-                <option value="recent">Editado recientemente</option>
-                <option value="date">Fecha de visita</option>
-                <option value="name">Nombre</option>
-                <option value="rating">Valoración</option>
+                <option value="recent">{t('Editado recientemente')}</option>
+                <option value="date">{t('Fecha de visita')}</option>
+                <option value="name">{t('Nombre')}</option>
+                <option value="rating">{t('Valoración')}</option>
               </select>
             </label>
           </div>
 
           {entries.length === 0 ? (
-            <p className="notice">Todavía no hay lugares. Ve al <Link to={basePath || '/'}>mapa</Link> y busca el primero.</p>
+            <p className="notice">{t('Todavía no hay lugares.')} <Link to={basePath || '/'}>{t('Ve al mapa y busca el primero.')}</Link></p>
           ) : results.length === 0 ? (
-            <p className="notice">Ningún lugar coincide con los filtros. Quita alguno para ver más.</p>
+            <p className="notice">{t('Ningún lugar coincide con los filtros. Quita alguno para ver más.')}</p>
           ) : (
             <ul className="list-page__list">
               {results.map((e) => {

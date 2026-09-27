@@ -1,6 +1,7 @@
 import { onAuthStateChanged, type User } from 'firebase/auth'
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import { auth } from './firebase'
+import { t } from './i18n'
 
 interface AuthState {
   user: User | null
@@ -32,5 +33,5 @@ export function authErrorMessage(err: unknown): string {
     'auth/requires-recent-login': 'Por seguridad, vuelve a escribir tu contraseña actual.',
     'auth/missing-password': 'Falta la contraseña. Escríbela para continuar.',
   }
-  return messages[code] ?? 'Algo salió mal. Inténtalo de nuevo.'
+  return t(messages[code] ?? 'Algo salió mal. Inténtalo de nuevo.')
 }

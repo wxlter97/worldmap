@@ -6,6 +6,7 @@ import { ChangePassword, DeleteAccount, EmailVerification } from '../components/
 import { disableSharing, enableSharing, saveDisplayName, setShowNotes } from '../lib/data'
 import { auth } from '../lib/firebase'
 import { getThemePref, setThemePref, type ThemePref } from '../lib/theme'
+import { getLang, setLang, t, type Lang } from '../lib/i18n'
 import './AccountPage.css'
 
 export function AccountPage() {
@@ -26,7 +27,7 @@ export function AccountPage() {
     try {
       await fn()
     } catch {
-      setError('No se pudo guardar. Revisa tu conexión: compartir necesita estar en línea.')
+      setError(t('No se pudo guardar. Revisa tu conexión: compartir necesita estar en línea.'))
     } finally {
       setBusy(false)
     }
@@ -42,12 +43,12 @@ export function AccountPage() {
   return (
     <div className="account-page">
       <div className="account-page__head">
-        <h1>Cuenta</h1>
+        <h1>{t('Cuenta')}</h1>
         <span className="label muted">{auth.currentUser?.email}</span>
       </div>
 
       <section className="account-section">
-        <h2>Nombre</h2>
+        <h2>{t('Nombre')}</h2>
         <form
           className="account-row"
           onSubmit={(e) => {
@@ -56,28 +57,28 @@ export function AccountPage() {
           }}
         >
           <label className="field account-row__grow">
-            <span>Se muestra en tu link compartido</span>
+            <span>{t('Se muestra en tu link compartido')}</span>
             <input value={name} maxLength={60} placeholder="Walter" onChange={(e) => setName(e.target.value)} />
           </label>
-          <button type="submit" className="btn" disabled={busy || name.trim() === profile.displayName}>Guardar</button>
+          <button type="submit" className="btn" disabled={busy || name.trim() === profile.displayName}>{t('Guardar')}</button>
         </form>
       </section>
 
       <section className="account-section">
         <div className="account-row account-row--between">
-          <h2>Link de solo lectura</h2>
+          <h2>{t('Link de solo lectura')}</h2>
           <button
             type="button"
             className="toggle"
             role="switch"
             aria-checked={profile.sharing.enabled}
-            aria-label="Compartir mi mapa"
+            aria-label={t('Compartir mi mapa')}
             disabled={busy}
             onClick={() => void run(() => (profile.sharing.enabled ? disableSharing(uid, profile) : enableSharing(uid, profile)))}
           />
         </div>
         <p className="account-copy">
-          Quien tenga el link verá tu mapa, lista, viajes, estadísticas y fotos. No puede editar nada ni ver tu correo.
+          {t('Quien tenga el link verá tu mapa, lista, viajes, estadísticas y fotos. No puede editar nada ni ver tu correo.')}
         </p>
         <label className="account-toggle">
           <button
@@ -85,66 +86,66 @@ export function AccountPage() {
             className="toggle"
             role="switch"
             aria-checked={!!profile.sharing.showNotes}
-            aria-label="Mostrar notas y personas en los links"
+            aria-label={t('Mostrar notas y personas en los links')}
             disabled={busy}
             onClick={() => void run(() => setShowNotes(uid, !profile.sharing.showNotes))}
           />
           <span>
-            <strong>Mostrar notas y personas</strong>
-            <span className="muted"> — descripciones y «con quién» en este link y en los links de viajes.</span>
+            <strong>{t('Mostrar notas y personas')}</strong>
+            <span className="muted"> — {t('descripciones y «con quién» en este link y en los links de viajes.')}</span>
           </span>
         </label>
 
         {link ? (
           <>
             <div className="account-link">
-              <input className="input" readOnly value={link} onFocus={(e) => e.target.select()} aria-label="Link compartido" />
-              <button type="button" className="btn btn--primary" onClick={copy}>{copied ? 'Copiado' : 'Copiar'}</button>
+              <input className="input" readOnly value={link} onFocus={(e) => e.target.select()} aria-label={t('Link compartido')} />
+              <button type="button" className="btn btn--primary" onClick={copy}>{copied ? t('Copiado') : t('Copiar')}</button>
             </div>
             <div className="account-row">
-              <a className="link-btn" href={link} target="_blank" rel="noreferrer">Abrir vista pública ↗</a>
+              <a className="link-btn" href={link} target="_blank" rel="noreferrer">{t('Abrir vista pública ↗')}</a>
               <button
                 type="button"
                 className="link-btn"
                 disabled={busy}
                 onClick={() => {
-                  if (confirm('El link actual dejará de funcionar. ¿Generar uno nuevo?')) void run(() => enableSharing(uid, profile))
+                  if (confirm(t('El link actual dejará de funcionar. ¿Generar uno nuevo?'))) void run(() => enableSharing(uid, profile))
                 }}
               >
-                Generar link nuevo
+                {t('Generar link nuevo')}
               </button>
             </div>
           </>
         ) : (
-          <p className="mono muted account-small">Desactivado. Actívalo para obtener un link.</p>
+          <p className="mono muted account-small">{t('Desactivado. Actívalo para obtener un link.')}</p>
         )}
         {error && <p className="field-error" role="alert">{error}</p>}
       </section>
 
       {Object.keys(profile.tripShares ?? {}).length > 0 && (
         <section className="account-section">
-          <h2>Viajes compartidos</h2>
+          <h2>{t('Viajes compartidos')}</h2>
           <ul className="account-trips">
             {Object.entries(profile.tripShares ?? {}).map(([tripId, token]) => (
               <li key={tripId}>
-                <Link to={`/?viaje=${tripId}`}>{trips.find((t) => t.id === tripId)?.name ?? 'Viaje'}</Link>
+                <Link to={`/?viaje=${tripId}`}>{trips.find((t) => t.id === tripId)?.name ?? t('Viaje')}</Link>
                 <span className="mono muted">/s/{token}</span>
               </li>
             ))}
           </ul>
-          <p className="account-copy">Para dejar de compartir un viaje, ábrelo y usa «Dejar de compartir».</p>
+          <p className="account-copy">{t('Para dejar de compartir un viaje, ábrelo y usa «Dejar de compartir».')}</p>
         </section>
       )}
 
       <section className="account-section">
-        <h2>Exportar</h2>
-        <p className="account-copy">Póster para imprimir o compartir, CSV para hojas de cálculo y copia de seguridad JSON.</p>
-        <Link to="/exportar" className="btn account-link-btn">Ir a Exportar →</Link>
+        <h2>{t('Exportar')}</h2>
+        <p className="account-copy">{t('Póster para imprimir o compartir, CSV para hojas de cálculo y copia de seguridad JSON.')}</p>
+        <Link to="/exportar" className="btn account-link-btn">{t('Ir a Exportar →')}</Link>
       </section>
 
       <section className="account-section">
-        <h2>Tema</h2>
-        <div className="tabs" role="radiogroup" aria-label="Tema de la interfaz">
+        <h2>{t('Tema')}</h2>
+        <div className="tabs" role="radiogroup" aria-label={t('Tema de la interfaz')}>
           {(
             [
               ['auto', 'Automático'],
@@ -163,11 +164,27 @@ export function AccountPage() {
                 setThemePref(id)
               }}
             >
+              {t(label)}
+            </button>
+          ))}
+        </div>
+        <p className="account-copy mono account-small">{t('Automático sigue el tema de tu dispositivo. Se guarda en este dispositivo.')}</p>
+      </section>
+
+      <section className="account-section">
+        <h2>{t('Idioma')}</h2>
+        <div className="tabs" role="radiogroup" aria-label={t('Idioma')}>
+          {(
+            [
+              ['es', 'Español'],
+              ['en', 'English'],
+            ] as [Lang, string][]
+          ).map(([id, label]) => (
+            <button key={id} type="button" role="radio" aria-checked={getLang() === id} aria-selected={getLang() === id} onClick={() => setLang(id)}>
               {label}
             </button>
           ))}
         </div>
-        <p className="account-copy mono account-small">Automático sigue el tema de tu dispositivo. Se guarda en este dispositivo.</p>
       </section>
 
       <EmailVerification />
@@ -175,9 +192,9 @@ export function AccountPage() {
 
       <section className="account-section">
         <p className="account-copy">
-          <Link to="/privacidad">Privacidad: qué se guarda y quién lo ve</Link>
+          <Link to="/privacidad">{t('Privacidad: qué se guarda y quién lo ve')}</Link>
         </p>
-        <button type="button" className="btn account-link-btn" onClick={() => signOut(auth)}>Cerrar sesión</button>
+        <button type="button" className="btn account-link-btn" onClick={() => signOut(auth)}>{t('Cerrar sesión')}</button>
       </section>
 
       <DeleteAccount />

@@ -5,6 +5,7 @@ import { mapLink } from '../lib/links'
 import { PLACE_TYPE_LABEL, flagEmoji, type Entry } from '../lib/model'
 import { combineWith, ideas, useGazetteer } from '../lib/suggestions'
 import { SuggestionList } from './Suggestions'
+import { t } from '../lib/i18n'
 import './WishlistView.css'
 
 const GROUPS: { title: string; match: (e: Entry) => boolean }[] = [
@@ -26,7 +27,7 @@ export function WishlistView() {
     <div className="wishlist">
       {list.length === 0 ? (
         <p className="notice">
-          Tu lista está vacía. Marca un lugar como <strong>Quiero ir</strong> o <strong>Planeado</strong>, o añade una de las ideas de abajo con «+».
+          {t('Tu lista está vacía. Marca un lugar como Quiero ir o Planeado, o añade una de las ideas de abajo con «+».')}
         </p>
       ) : (
         GROUPS.map((g) => {
@@ -35,7 +36,7 @@ export function WishlistView() {
           return (
             <section key={g.title} className="wishlist__group">
               <h2>
-                {g.title} <span className="label muted">{items.length}</span>
+                {t(g.title)} <span className="label muted">{items.length}</span>
               </h2>
               <ul className="wishlist__items">
                 {items.map((e) => (
@@ -52,11 +53,11 @@ export function WishlistView() {
                       </span>
                     </Link>
                     <div className="wish__combine">
-                      <span className="label muted">Combínalo con</span>
+                      <span className="label muted">{t('Combínalo con')}</span>
                       {gz ? (
                         <SuggestionList geo={geo} suggestions={combineWith(geo, e, entries, summaries, gz, 4)} basePath={basePath} uid={owner} />
                       ) : (
-                        <p className="mono muted">Buscando lugares cercanos…</p>
+                        <p className="mono muted">{t('Buscando lugares cercanos…')}</p>
                       )}
                     </div>
                   </li>
@@ -69,7 +70,7 @@ export function WishlistView() {
 
       {ideaList.length > 0 && (
         <section className="wishlist__ideas">
-          <h2>Ideas</h2>
+          <h2>{t('Ideas')}</h2>
           {ideaList.map((idea) => (
             <div key={idea.title} className="idea">
               <h3>{idea.title}</h3>

@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState } from 'react'
 import type { Geo } from '../lib/geo'
 import { PLACE_TYPE_LABEL, STATUS_LABEL, flagEmoji, type Entry, type PlaceType } from '../lib/model'
 import { normalize, searchPlaces, type Place } from '../lib/search'
+import { t } from '../lib/i18n'
 import './SearchBox.css'
 
 interface Props {
@@ -15,7 +16,7 @@ interface Props {
 }
 
 const FILTERS: { label: string; types: PlaceType[] | null }[] = [
-  { label: 'Todo', types: null },
+  { label: 'Todo', types: null }, // etiquetas traducidas al pintar
   { label: 'Países', types: ['country'] },
   { label: 'Ciudades', types: ['city'] },
   { label: 'Lugares', types: ['landmark', 'custom'] },
@@ -65,7 +66,7 @@ export function SearchBox({ geo, entries, onPick, countryId, types, placeholder,
 
   return (
     <div className="search">
-      <label className="visually-hidden" htmlFor={listId + '-input'}>Buscar</label>
+      <label className="visually-hidden" htmlFor={listId + '-input'}>{t('Buscar')}</label>
       <input
         ref={inputRef}
         id={listId + '-input'}
@@ -77,7 +78,7 @@ export function SearchBox({ geo, entries, onPick, countryId, types, placeholder,
         aria-activedescendant={results[active] ? `${listId}-${active}` : undefined}
         autoComplete="off"
         autoFocus={autoFocus}
-        placeholder={placeholder ?? 'Buscar país, ciudad, lugar…'}
+        placeholder={placeholder ?? t('Buscar país, ciudad, lugar…')}
         value={query}
         onChange={(e) => {
           setQuery(e.target.value)
@@ -95,23 +96,23 @@ export function SearchBox({ geo, entries, onPick, countryId, types, placeholder,
         }}
       />
       {!types && open && query.length >= 2 && (
-        <div className="search__filters" role="group" aria-label="Filtrar por tipo">
+        <div className="search__filters" role="group" aria-label={t('Filtrar por tipo')}>
           {FILTERS.map((f, i) => (
             <button
-              key={f.label}
+              key={t(f.label)}
               type="button"
               className={i === filter ? 'badge badge--ink' : 'badge'}
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => setFilter(i)}
             >
-              {f.label}
+              {t(f.label)}
             </button>
           ))}
         </div>
       )}
       {open && query.length >= 2 && (
         <ul className="search__results" id={listId} role="listbox">
-          {results.length === 0 && <li className="search__empty">Sin resultados para «{query}».</li>}
+          {results.length === 0 && <li className="search__empty">{t('Sin resultados para «{query}».', { query })}</li>}
           {results.map((p, i) => {
             const entry = byKey.get(`${p.type}:${p.id}`)
             const country = geo.countries[p.countryId]
@@ -133,7 +134,7 @@ export function SearchBox({ geo, entries, onPick, countryId, types, placeholder,
                   <span className="search__meta">
                     {PLACE_TYPE_LABEL[p.type]}
                     {p.source === 'unesco' && ' · UNESCO'}
-                    {p.source === 'wonder' && ' · Maravilla'}
+                    {p.source === 'wonder' && ` · ${t('Maravilla')}`}
                     {p.type !== 'country' && country && ` · ${[region?.name, country.name].filter(Boolean).join(', ')}`}
                   </span>
                 </span>

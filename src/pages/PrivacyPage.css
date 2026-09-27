@@ -7,6 +7,7 @@
   height: var(--header-h);
   display: flex;
   align-items: center;
+  justify-content: space-between;
   padding: 0 var(--sp-8);
   border-bottom: var(--border);
 }

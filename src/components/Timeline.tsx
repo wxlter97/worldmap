@@ -5,6 +5,7 @@ import { mapLink } from '../lib/links'
 import { BEEN_STATUSES, PLACE_TYPE_LABEL, STATUS_LABEL, flagEmoji, formatRange, rangeDays, type DateRange, type Entry } from '../lib/model'
 import { uniqueDays } from '../lib/stats'
 import { PhotoThumb, entryPhotos } from './Photos'
+import { locale, t, tn } from '../lib/i18n'
 import './Timeline.css'
 
 interface Item {
@@ -13,7 +14,7 @@ interface Item {
 }
 
 const monthName = (ym: string) =>
-  new Date(`${ym}-01T00:00:00`).toLocaleDateString('es', { month: 'long' }).replace(/^./, (c) => c.toUpperCase())
+  new Date(`${ym}-01T00:00:00`).toLocaleDateString(locale(), { month: 'long' }).replace(/^./, (c) => c.toUpperCase())
 
 /** Diario de viajes: cada visita con fecha, por año y mes; lo planeado a futuro aparece primero. */
 export function Timeline() {
@@ -50,7 +51,7 @@ export function Timeline() {
             </strong>
             <span className="mono muted">
               {PLACE_TYPE_LABEL[i.entry.type]}
-              {i.entry.type !== 'country' && country && ` · ${country.name}`} · {rangeDays(i.range)} d
+              {i.entry.type !== 'country' && country && ` · ${country.name}`} · {tn(rangeDays(i.range), '{n} día', '{n} días')}
               {!BEEN_STATUSES.has(i.entry.status) && ` · ${STATUS_LABEL[i.entry.status]}`}
             </span>
             {i.range.tripId && tripName.get(i.range.tripId) && <span className="badge">{tripName.get(i.range.tripId)}</span>}
@@ -62,14 +63,14 @@ export function Timeline() {
   }
 
   if (!upcoming.length && !years.size) {
-    return <p className="notice">Aún no hay visitas con fecha. Añade fechas a tus lugares para ver tu diario de viajes.</p>
+    return <p className="notice">{t('Aún no hay visitas con fecha. Añade fechas a tus lugares para ver tu diario de viajes.')}</p>
   }
 
   return (
     <div className="timeline">
       {upcoming.length > 0 && (
         <section className="tl-year tl-year--upcoming">
-          <h2>Próximamente</h2>
+          <h2>{t('Próximamente')}</h2>
           <ul className="tl-list">{upcoming.map(row)}</ul>
         </section>
       )}
@@ -86,8 +87,8 @@ export function Timeline() {
             <div className="tl-year__head">
               <h2>{year}</h2>
               <span className="mono muted">
-                {countries.size} {countries.size === 1 ? 'país' : 'países'} · {items.length} {items.length === 1 ? 'visita' : 'visitas'} ·{' '}
-                {uniqueDays(items.map((i) => i.range))} días
+                {tn(countries.size, '{n} país', '{n} países')} · {tn(items.length, '{n} visita', '{n} visitas')} ·{' '}
+                {tn(uniqueDays(items.map((i) => i.range)), '{n} día', '{n} días')}
               </span>
             </div>
             {[...months].map(([ym, list]) => (
@@ -101,7 +102,7 @@ export function Timeline() {
       })}
       {undated > 0 && (
         <p className="mono muted tl-undated">
-          {undated} {undated === 1 ? 'lugar sin fechas no aparece' : 'lugares sin fechas no aparecen'} aquí.
+          {tn(undated, '{n} lugar sin fechas no aparece aquí.', '{n} lugares sin fechas no aparecen aquí.')}
         </p>
       )}
     </div>

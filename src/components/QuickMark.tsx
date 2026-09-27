@@ -3,6 +3,7 @@ import { deleteEntry, saveEntry } from '../lib/data'
 import { CONTINENTS, type ContinentId, type Geo } from '../lib/geo'
 import { BEEN_STATUSES, STATUS_LABEL, emptyEntry, entryKey, flagEmoji, type CountrySummary, type Entry, type Status } from '../lib/model'
 import { normalize } from '../lib/search'
+import { t, tn } from '../lib/i18n'
 import './QuickMark.css'
 
 export const QUICK_STATUSES: Status[] = ['visited', 'lived', 'wishlist']
@@ -59,23 +60,23 @@ export function QuickMarkPanel({ uid, geo, entries, summaries, status, onStatus,
 
   const toggle = (id: string) => {
     const r = toggleCountry(uid, geo, entries, id, status)
-    setLocalMsg(r === 'kept' ? `${geo.countries[id].name} tiene fechas o notas: ábrelo en el mapa para quitarlo.` : null)
+    setLocalMsg(r === 'kept' ? t('{country} tiene fechas o notas: ábrelo en el mapa para quitarlo.', { country: geo.countries[id].name }) : null)
   }
 
   return (
     <section className="quick" aria-labelledby="quick-title">
       <header className="quick__head">
         <div>
-          <p className="label muted">Marcado rápido</p>
-          <h2 id="quick-title">Toca países en el mapa</h2>
+          <p className="label muted">{t('Marcado rápido')}</p>
+          <h2 id="quick-title">{t('Toca países en el mapa')}</h2>
         </div>
-        <button type="button" className="btn btn--primary" onClick={onDone}>Listo</button>
+        <button type="button" className="btn btn--primary" onClick={onDone}>{t('Listo')}</button>
       </header>
 
       <div className="quick__body">
         <div className="field">
-          <span>Marcar como</span>
-          <div className="tabs" role="radiogroup" aria-label="Estado para marcar">
+          <span>{t('Marcar como')}</span>
+          <div className="tabs" role="radiogroup" aria-label={t('Estado para marcar')}>
             {QUICK_STATUSES.map((s) => (
               <button key={s} type="button" role="radio" aria-checked={status === s} aria-selected={status === s} onClick={() => onStatus(s)}>
                 {STATUS_LABEL[s]}
@@ -84,16 +85,16 @@ export function QuickMarkPanel({ uid, geo, entries, summaries, status, onStatus,
           </div>
         </div>
         <p className="mono quick__hint">
-          Un toque marca, otro toque desmarca. {marked} {marked === 1 ? 'país marcado' : 'países marcados'} como {STATUS_LABEL[status]}.
+          {t('Un toque marca, otro toque desmarca.')} {tn(marked, '{n} país marcado como {status}.', '{n} países marcados como {status}.', { status: STATUS_LABEL[status] })}
         </p>
         {(localMsg ?? message) && <p className="notice" role="status">{localMsg ?? message}</p>}
 
         <label className="field">
-          <span>Buscar en la lista</span>
-          <input type="search" value={query} placeholder="País o territorio…" onChange={(e) => setQuery(e.target.value)} />
+          <span>{t('Buscar en la lista')}</span>
+          <input type="search" value={query} placeholder={t('País o territorio…')} onChange={(e) => setQuery(e.target.value)} />
         </label>
         {!query && (
-          <div className="quick__continents" role="group" aria-label="Continente">
+          <div className="quick__continents" role="group" aria-label={t('Continente')}>
             {(Object.keys(CONTINENTS) as ContinentId[]).map((c) => (
               <button key={c} type="button" className={c === continent ? 'badge badge--ink' : 'badge'} onClick={() => setContinent(c)}>
                 {CONTINENTS[c]}
@@ -115,10 +116,10 @@ export function QuickMarkPanel({ uid, geo, entries, summaries, status, onStatus,
                   <span aria-hidden="true">{flagEmoji(c.iso2)}</span>
                   <span className="quick__name">
                     {c.name}
-                    {c.kind === 'territory' && <span className="mono muted"> · territorio</span>}
+                    {c.kind === 'territory' && <span className="mono muted"> · {t('territorio')}</span>}
                   </span>
                   {own && !checked && <span className="badge">{STATUS_LABEL[own.status]}</span>}
-                  {derived && <span className="badge">Por ciudades</span>}
+                  {derived && <span className="badge">{t('Por ciudades')}</span>}
                 </label>
               </li>
             )

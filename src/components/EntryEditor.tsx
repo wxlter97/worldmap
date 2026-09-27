@@ -3,6 +3,7 @@ import { newTrip, removePhoto, saveTrip, uploadPhoto } from '../lib/data'
 import { MAX_PHOTOS, PhotoThumb, entryPhotos } from './Photos'
 import { STATUSES, STATUS_LABEL, formatRange, rangeDays, type DateRange, type Entry, type Trip } from '../lib/model'
 import { Markdown } from './ui'
+import { t, tn } from '../lib/i18n'
 import './EntryEditor.css'
 
 const NEW_TRIP = '__new__'
@@ -35,9 +36,9 @@ export function EntryEditor({ uid, entry, isNew, trips, defaultTripId = null, on
   const set = <K extends keyof Entry>(k: K, v: Entry[K]) => setDraft((d) => ({ ...d, [k]: v }))
 
   const addRange = () => {
-    if (!newRange.start) return setRangeError('Falta la fecha de inicio. Elige al menos el día de llegada.')
+    if (!newRange.start) return setRangeError(t('Falta la fecha de inicio. Elige al menos el día de llegada.'))
     const end = newRange.end || newRange.start
-    if (end < newRange.start) return setRangeError('La fecha final es anterior a la inicial. Corrige una de las dos.')
+    if (end < newRange.start) return setRangeError(t('La fecha final es anterior a la inicial. Corrige una de las dos.'))
     const dates = [...draft.dates, { start: newRange.start, end, tripId: newRange.tripId || null }].sort((a, b) => a.start.localeCompare(b.start))
     set('dates', dates)
     setNewRange({ start: '', end: '', tripId: newRange.tripId })
@@ -48,7 +49,7 @@ export function EntryEditor({ uid, entry, isNew, trips, defaultTripId = null, on
     if (!files?.length) return
     const room = MAX_PHOTOS - photos.length
     const list = [...files].slice(0, room)
-    setPhotoError(files.length > room ? `Máximo ${MAX_PHOTOS} fotos por lugar: se subirán solo ${room}.` : null)
+    setPhotoError(files.length > room ? t('Máximo {max} fotos por lugar: se subirán solo {n}.', { max: MAX_PHOTOS, n: room }) : null)
     setUploading(true)
     let failed = 0
     for (const file of list) {
@@ -60,7 +61,7 @@ export function EntryEditor({ uid, entry, isNew, trips, defaultTripId = null, on
         failed++
       }
     }
-    if (failed) setPhotoError(`No se ${failed === 1 ? 'pudo subir 1 foto' : `pudieron subir ${failed} fotos`}. Revisa tu conexión y que sean imágenes (JPG, PNG, HEIC, WebP).`)
+    if (failed) setPhotoError(tn(failed, 'No se pudo subir {n} foto. Revisa tu conexión y que sea una imagen (JPG, PNG, HEIC, WebP).', 'No se pudieron subir {n} fotos. Revisa tu conexión y que sean imágenes (JPG, PNG, HEIC, WebP).'))
     setUploading(false)
   }
 
@@ -84,7 +85,7 @@ export function EntryEditor({ uid, entry, isNew, trips, defaultTripId = null, on
   return (
     <form className="editor" onSubmit={submit}>
       <fieldset className="editor__status">
-        <legend className="label">Estado</legend>
+        <legend className="label">{t('Estado')}</legend>
         <div className="tabs" role="radiogroup">
           {STATUSES.map((s) => (
             <button key={s} type="button" role="radio" aria-checked={draft.status === s} aria-selected={draft.status === s} onClick={() => set('status', s)}>
@@ -96,19 +97,19 @@ export function EntryEditor({ uid, entry, isNew, trips, defaultTripId = null, on
 
       {draft.status === 'wishlist' && (
         <label className="field">
-          <span>Prioridad</span>
+          <span>{t('Prioridad')}</span>
           <select value={draft.priority ?? ''} onChange={(e) => set('priority', e.target.value ? Number(e.target.value) : null)}>
-            <option value="">Sin prioridad</option>
-            <option value="1">Alta</option>
-            <option value="2">Media</option>
-            <option value="3">Baja</option>
+            <option value="">{t('Sin prioridad')}</option>
+            <option value="1">{t('Alta')}</option>
+            <option value="2">{t('Media')}</option>
+            <option value="3">{t('Baja')}</option>
           </select>
         </label>
       )}
 
       <section className="editor__section">
-        <h3 className="label">Fechas</h3>
-        {draft.dates.length === 0 && <p className="muted mono editor__hint">Sin fechas. Añade una o varias visitas.</p>}
+        <h3 className="label">{t('Fechas')}</h3>
+        {draft.dates.length === 0 && <p className="muted mono editor__hint">{t('Sin fechas. Añade una o varias visitas.')}</p>}
         <ul className="editor__dates">
           {draft.dates.map((r, i) => (
             <li key={`${r.start}-${i}`}>
@@ -118,17 +119,17 @@ export function EntryEditor({ uid, entry, isNew, trips, defaultTripId = null, on
               {trips.length > 0 && (
                 <select
                   className="editor__date-trip"
-                  aria-label={`Viaje de ${formatRange(r)}`}
+                  aria-label={t('Viaje de {fechas}', { fechas: formatRange(r) })}
                   value={r.tripId ?? ''}
                   onChange={(e) => set('dates', draft.dates.map((d, j) => (j === i ? { ...d, tripId: e.target.value || null } : d)))}
                 >
-                  <option value="">Sin viaje</option>
+                  <option value="">{t('Sin viaje')}</option>
                   {trips.map((t) => (
                     <option key={t.id} value={t.id}>{t.name}</option>
                   ))}
                 </select>
               )}
-              <button type="button" className="icon-btn" aria-label={`Quitar ${formatRange(r)}`} onClick={() => set('dates', draft.dates.filter((_, j) => j !== i))}>
+              <button type="button" className="icon-btn" aria-label={t('Quitar {fechas}', { fechas: formatRange(r) })} onClick={() => set('dates', draft.dates.filter((_, j) => j !== i))}>
                 ×
               </button>
             </li>
@@ -136,78 +137,78 @@ export function EntryEditor({ uid, entry, isNew, trips, defaultTripId = null, on
         </ul>
         <div className="editor__range">
           <label className={`field ${rangeError ? 'field--error' : ''}`}>
-            <span>Desde</span>
+            <span>{t('Desde')}</span>
             <input type="date" value={newRange.start} onChange={(e) => setNewRange({ ...newRange, start: e.target.value })} />
           </label>
           <label className="field">
-            <span>Hasta</span>
+            <span>{t('Hasta')}</span>
             <input type="date" value={newRange.end} min={newRange.start} onChange={(e) => setNewRange({ ...newRange, end: e.target.value })} />
           </label>
           <label className="field">
-            <span>Viaje</span>
+            <span>{t('Viaje')}</span>
             <select
               value={newRange.tripId ?? ''}
               onChange={(e) => {
                 if (e.target.value !== NEW_TRIP) return setNewRange({ ...newRange, tripId: e.target.value || null })
-                const name = prompt('Nombre del viaje nuevo')?.trim()
+                const name = prompt(t('Nombre del viaje nuevo'))?.trim()
                 if (!name) return
                 const trip = newTrip(name)
                 void saveTrip(uid, trip)
                 setNewRange({ ...newRange, tripId: trip.id })
               }}
             >
-              <option value="">Sin viaje</option>
+              <option value="">{t('Sin viaje')}</option>
               {trips.map((t) => (
                 <option key={t.id} value={t.id}>{t.name}</option>
               ))}
-              {pendingTrip(newRange.tripId, trips) && <option value={newRange.tripId!}>(nuevo viaje)</option>}
-              <option value={NEW_TRIP}>+ Nuevo viaje…</option>
+              {pendingTrip(newRange.tripId, trips) && <option value={newRange.tripId!}>{t('(nuevo viaje)')}</option>}
+              <option value={NEW_TRIP}>{t('+ Nuevo viaje…')}</option>
             </select>
           </label>
-          <button type="button" className="btn" onClick={addRange}>Añadir fecha</button>
+          <button type="button" className="btn" onClick={addRange}>{t('Añadir fecha')}</button>
         </div>
         {rangeError && <p className="field-error">{rangeError}</p>}
       </section>
 
       <section className="editor__section">
         <div className="editor__row">
-          <h3 className="label">Descripción</h3>
+          <h3 className="label">{t('Descripción')}</h3>
           <button type="button" className="link-btn" onClick={() => setPreview((p) => !p)}>
-            {preview ? 'Editar' : 'Vista previa'}
+            {preview ? t('Editar') : t('Vista previa')}
           </button>
         </div>
         {preview ? (
           <div className="editor__preview">
-            {draft.description ? <Markdown source={draft.description} /> : <p className="muted mono">Nada que mostrar.</p>}
+            {draft.description ? <Markdown source={draft.description} /> : <p className="muted mono">{t('Nada que mostrar.')}</p>}
           </div>
         ) : (
           <label className="field">
-            <span className="visually-hidden">Descripción en markdown</span>
-            <textarea value={draft.description} maxLength={20000} placeholder="Markdown: **negrita**, listas, enlaces…" onChange={(e) => set('description', e.target.value)} />
+            <span className="visually-hidden">{t('Descripción en markdown')}</span>
+            <textarea value={draft.description} maxLength={20000} placeholder={t('Markdown: **negrita**, listas, enlaces…')} onChange={(e) => set('description', e.target.value)} />
           </label>
         )}
       </section>
 
       <div className="editor__grid">
         <label className="field">
-          <span>Etiquetas</span>
-          <input value={tagsText} placeholder="playa, trabajo, familia" onChange={(e) => setTagsText(e.target.value)} />
+          <span>{t('Etiquetas')}</span>
+          <input value={tagsText} placeholder={t('playa, trabajo, familia')} onChange={(e) => setTagsText(e.target.value)} />
         </label>
         <label className="field">
-          <span>Con quién</span>
+          <span>{t('Con quién')}</span>
           <input value={draft.people} placeholder="Ana, Luis" onChange={(e) => set('people', e.target.value)} />
         </label>
       </div>
 
       <fieldset className="editor__rating">
-        <legend className="label">Valoración</legend>
+        <legend className="label">{t('Valoración')}</legend>
         <div className="editor__stars">
           {[1, 2, 3, 4, 5].map((n) => (
             <button
               key={n}
               type="button"
               className={draft.rating != null && n <= draft.rating ? 'star star--on' : 'star'}
-              aria-label={`${n} de 5`}
+              aria-label={t('{n} de 5', { n })}
               aria-pressed={draft.rating === n}
               onClick={() => set('rating', draft.rating === n ? null : n)}
             >
@@ -219,12 +220,12 @@ export function EntryEditor({ uid, entry, isNew, trips, defaultTripId = null, on
 
       {draft.type === 'country' && (
         <label className="field">
-          <span>% del país (manual)</span>
+          <span>{t('% del país (manual)')}</span>
           <input
             type="number"
             min={0}
             max={100}
-            placeholder="Automático por regiones"
+            placeholder={t('Automático por regiones')}
             value={draft.percentOverride ?? ''}
             onChange={(e) => set('percentOverride', e.target.value === '' ? null : Math.min(100, Math.max(0, Number(e.target.value))))}
           />
@@ -232,7 +233,7 @@ export function EntryEditor({ uid, entry, isNew, trips, defaultTripId = null, on
       )}
 
       <section className="editor__section">
-        <h3 className="label">Fotos · {photos.length}/{MAX_PHOTOS}</h3>
+        <h3 className="label">{t('Fotos')} · {photos.length}/{MAX_PHOTOS}</h3>
         {photos.length > 0 && (
           <ul className="photo-grid" role="list">
             {photos.map((path, i) => (
@@ -240,11 +241,11 @@ export function EntryEditor({ uid, entry, isNew, trips, defaultTripId = null, on
                 <PhotoThumb path={path} />
                 <div className="photo-cell__actions">
                   {i === 0 ? (
-                    <button type="button" className="photo-cell__cover" disabled>Portada</button>
+                    <button type="button" className="photo-cell__cover" disabled>{t('Portada')}</button>
                   ) : (
-                    <button type="button" onClick={() => makeCover(i)} aria-label={`Usar foto ${i + 1} como portada`}>★</button>
+                    <button type="button" onClick={() => makeCover(i)} aria-label={t('Usar foto {n} como portada', { n: i + 1 })}>★</button>
                   )}
-                  <button type="button" onClick={() => removeAt(i)} aria-label={`Quitar foto ${i + 1}`}>Quitar</button>
+                  <button type="button" onClick={() => removeAt(i)} aria-label={t('Quitar foto {n}', { n: i + 1 })}>{t('Quitar')}</button>
                 </div>
               </li>
             ))}
@@ -252,7 +253,7 @@ export function EntryEditor({ uid, entry, isNew, trips, defaultTripId = null, on
         )}
         <div className="editor__row">
           <label className={photos.length >= MAX_PHOTOS ? 'btn btn--disabled' : 'btn'} aria-disabled={uploading || photos.length >= MAX_PHOTOS}>
-            {uploading ? 'Subiendo…' : photos.length ? 'Añadir fotos' : 'Subir fotos'}
+            {uploading ? t('Subiendo…') : photos.length ? t('Añadir fotos') : t('Subir fotos')}
             <input
               type="file"
               accept="image/*"
@@ -270,17 +271,17 @@ export function EntryEditor({ uid, entry, isNew, trips, defaultTripId = null, on
       </section>
 
       <div className="editor__actions">
-        <button type="submit" className="btn btn--primary" disabled={uploading}>{isNew ? 'Guardar' : 'Guardar cambios'}</button>
-        <button type="button" className="btn" disabled={uploading} onClick={cancel}>Cancelar</button>
+        <button type="submit" className="btn btn--primary" disabled={uploading}>{isNew ? t('Guardar') : t('Guardar cambios')}</button>
+        <button type="button" className="btn" disabled={uploading} onClick={cancel}>{t('Cancelar')}</button>
         {!isNew && (
           <button
             type="button"
             className="btn btn--danger"
             onClick={() => {
-              if (confirm(`¿Eliminar la entrada de ${entry.name}? No se puede deshacer.`)) onDelete()
+              if (confirm(t('¿Eliminar la entrada de {name}? No se puede deshacer.', { name: entry.name }))) onDelete()
             }}
           >
-            Eliminar
+            {t('Eliminar')}
           </button>
         )}
       </div>

@@ -1,16 +1,20 @@
 // Modelo de datos del usuario y reglas derivadas (estado por país, % visitado).
 import type { Country, Geo } from './geo'
+import { locale, translated } from './i18n'
 
 export const STATUSES = ['lived', 'visited', 'transit', 'planned', 'wishlist'] as const
 export type Status = (typeof STATUSES)[number]
 
-export const STATUS_LABEL: Record<Status, string> = {
+const STATUS_ES: Record<Status, string> = {
   lived: 'Vivido',
   visited: 'Visitado',
   transit: 'Escala',
   planned: 'Planeado',
   wishlist: 'Quiero ir',
 }
+
+/** Etiquetas traducidas al idioma activo en cada lectura. */
+export const STATUS_LABEL = translated(STATUS_ES)
 
 /** Estados que cuentan como "he estado ahí" para estadísticas y el % del país. */
 export const BEEN_STATUSES: ReadonlySet<Status> = new Set(['lived', 'visited'])
@@ -20,13 +24,15 @@ const STATUS_RANK: Record<Status, number> = { lived: 5, visited: 4, transit: 3, 
 
 export type PlaceType = 'country' | 'region' | 'city' | 'landmark' | 'custom'
 
-export const PLACE_TYPE_LABEL: Record<PlaceType, string> = {
+const PLACE_TYPE_ES: Record<PlaceType, string> = {
   country: 'País',
   region: 'Región',
   city: 'Ciudad',
   landmark: 'Lugar',
   custom: 'Lugar propio',
 }
+
+export const PLACE_TYPE_LABEL = translated(PLACE_TYPE_ES)
 
 export interface DateRange {
   start: string // YYYY-MM-DD
@@ -161,7 +167,7 @@ export function rangeDays(r: DateRange): number {
 
 export function formatRange(r: DateRange): string {
   const fmt = (s: string) =>
-    new Date(`${s}T00:00:00`).toLocaleDateString('es', { day: 'numeric', month: 'short', year: 'numeric' })
+    new Date(`${s}T00:00:00`).toLocaleDateString(locale(), { day: 'numeric', month: 'short', year: 'numeric' })
   if (!r.end || r.end === r.start) return fmt(r.start)
   return `${fmt(r.start)} – ${fmt(r.end)}`
 }

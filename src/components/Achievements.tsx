@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Achievement, AchievementGroup } from '../lib/achievements'
+import { locale, t } from '../lib/i18n'
 import './Achievements.css'
 
 /**
@@ -19,7 +20,7 @@ export function BandIcon({ glyph, progress, size = 64 }: { glyph: string; progre
 const GROUPS: AchievementGroup[] = ['Países', 'Continentes', 'Regiones del mundo', 'Ciudades', 'Lugares', 'Tiempo']
 
 const formatDate = (d: string) =>
-  new Date(`${d}T00:00:00`).toLocaleDateString('es', { day: 'numeric', month: 'short', year: 'numeric' })
+  new Date(`${d}T00:00:00`).toLocaleDateString(locale(), { day: 'numeric', month: 'short', year: 'numeric' })
 
 export function AchievementList({ achievements }: { achievements: Achievement[] }) {
   return (
@@ -30,20 +31,20 @@ export function AchievementList({ achievements }: { achievements: Achievement[] 
         return (
           <section key={group} className="achievements__group">
             <h3>
-              {group} <span className="label muted">{done}/{items.length}</span>
+              {t(group)} <span className="label muted">{done}/{items.length}</span>
             </h3>
             <ul className="achievements__grid">
               {items.map((a) => (
                 <li key={a.def.id} className={a.unlocked ? 'ach ach--done' : 'ach'}>
                   <BandIcon glyph={a.def.glyph} progress={a.value / a.def.target} />
                   <div className="ach__text">
-                    <strong>{a.def.title}</strong>
-                    <span className="ach__desc">{a.def.description}</span>
+                    <strong>{t(a.def.title)}</strong>
+                    <span className="ach__desc">{t(a.def.description)}</span>
                     <span className="ach__meta mono">
                       {a.unlocked
                         ? a.unlockedAt
-                          ? `Desbloqueado · ${formatDate(a.unlockedAt)}`
-                          : 'Desbloqueado'
+                          ? `${t('Desbloqueado')} · ${formatDate(a.unlockedAt)}`
+                          : t('Desbloqueado')
                         : `${Math.min(a.value, a.def.target)}/${a.def.target}`}
                     </span>
                   </div>
@@ -85,10 +86,10 @@ export function AchievementToaster({ achievements }: { achievements: Achievement
         <div key={a.def.id} className="toast">
           <BandIcon glyph={a.def.glyph} progress={1} size={48} />
           <span className="toast__text">
-            <span className="label">Logro desbloqueado</span>
-            <strong>{a.def.title}</strong>
+            <span className="label">{t('Logro desbloqueado')}</span>
+            <strong>{t(a.def.title)}</strong>
           </span>
-          <button type="button" aria-label="Cerrar aviso" onClick={() => setToasts((t) => t.filter((x) => x !== a))}>×</button>
+          <button type="button" aria-label={t('Cerrar aviso')} onClick={() => setToasts((t) => t.filter((x) => x !== a))}>×</button>
         </div>
       ))}
     </div>

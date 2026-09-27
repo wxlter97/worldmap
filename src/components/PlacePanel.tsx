@@ -13,6 +13,7 @@ import {
   type Entry,
   type Trip,
 } from '../lib/model'
+import { locale, t, tn } from '../lib/i18n'
 import type { Place } from '../lib/search'
 import { combineWith, useGazetteer } from '../lib/suggestions'
 import { EntryEditor } from './EntryEditor'
@@ -37,10 +38,9 @@ interface Props {
   basePath?: string
 }
 
-const languageNames = new Intl.DisplayNames(['es'], { type: 'language' })
 const langName = (code: string) => {
   try {
-    return languageNames.of(code) ?? code
+    return new Intl.DisplayNames([locale()], { type: 'language' }).of(code) ?? code
   } catch {
     return code
   }
@@ -89,9 +89,9 @@ export function PlacePanel({ uid, geo, place, entries, trips, summaries, onOpen,
           <span className="panel__flag" aria-hidden="true">{flagEmoji(country?.iso2 ?? null)}</span>
           <div>
             <p className="label muted">
-              {place.type === 'country' && country?.kind === 'territory' ? 'Territorio' : PLACE_TYPE_LABEL[place.type]}
-              {place.source === 'unesco' && ' · Patrimonio UNESCO'}
-              {place.source === 'wonder' && ' · Maravilla del mundo'}
+              {place.type === 'country' && country?.kind === 'territory' ? t('Territorio') : PLACE_TYPE_LABEL[place.type]}
+              {place.source === 'unesco' && ` · ${t('Patrimonio UNESCO')}`}
+              {place.source === 'wonder' && ` · ${t('Maravilla del mundo')}`}
             </p>
             <h2 id="panel-title">{place.name}</h2>
             {place.type !== 'country' && country && (
@@ -102,7 +102,7 @@ export function PlacePanel({ uid, geo, place, entries, trips, summaries, onOpen,
             )}
           </div>
         </div>
-        <button type="button" className="icon-btn" aria-label={closeLabel ?? 'Cerrar'} title={closeLabel} onClick={onClose}>
+        <button type="button" className="icon-btn" aria-label={closeLabel ?? t('Cerrar')} title={closeLabel} onClick={onClose}>
           {closeLabel ? '←' : '×'}
         </button>
       </header>
@@ -111,12 +111,12 @@ export function PlacePanel({ uid, geo, place, entries, trips, summaries, onOpen,
         <section className="panel__section">
           <div className="panel__percent">
             <span className="stat__value">{formatPercent(summary.percent)}</span>
-            <span className="label muted">{summary.percentIsManual ? 'del país · manual' : 'del país · por regiones'}</span>
+            <span className="label muted">{summary.percentIsManual ? t('del país · manual') : t('del país · por regiones')}</span>
           </div>
           <Meter percent={summary.percent} label={`Porcentaje de ${place.name} visitado`} />
           {summary.status && !entry && (
             <p className="mono panel__derived">
-              Estado derivado: <span className="badge badge--faro">{STATUS_LABEL[summary.status]}</span>
+              {t('Estado derivado:')} <span className="badge badge--faro">{STATUS_LABEL[summary.status]}</span>
             </p>
           )}
         </section>
@@ -147,7 +147,7 @@ export function PlacePanel({ uid, geo, place, entries, trips, summaries, onOpen,
       ) : (
         !readOnly && (
           <section className="panel__section">
-            <button type="button" className="btn btn--primary" onClick={startEdit}>Añadir a mi mapa</button>
+            <button type="button" className="btn btn--primary" onClick={startEdit}>{t('Añadir a mi mapa')}</button>
           </section>
         )
       )}
@@ -159,8 +159,8 @@ export function PlacePanel({ uid, geo, place, entries, trips, summaries, onOpen,
       {place.type === 'country' && country && (
         <>
           <section className="panel__section">
-            <h3 className="panel__h3">Ciudades y lugares</h3>
-            {children.length === 0 && <p className="mono muted panel__small">Aún no hay ciudades ni lugares en {country.name}.</p>}
+            <h3 className="panel__h3">{t('Ciudades y lugares')}</h3>
+            {children.length === 0 && <p className="mono muted panel__small">{t('Aún no hay ciudades ni lugares en {country}.', { country: country.name })}</p>}
             <ul className="panel__list">
               {children.map((e) => (
                 <li key={e.key}>
@@ -181,12 +181,12 @@ export function PlacePanel({ uid, geo, place, entries, trips, summaries, onOpen,
                   entries={entries}
                   countryId={country.id}
                   types={['city', 'landmark', 'region', 'custom']}
-                  placeholder={`Añadir ciudad, región o lugar en ${country.name}…`}
+                  placeholder={t('Añadir ciudad, región o lugar en {country}…', { country: country.name })}
                   onPick={onOpen}
                 />
                 {onStartPick && (
                   <button type="button" className="link-btn" onClick={() => onStartPick(country.id)}>
-                    + Marcar un lugar propio en el mapa
+                    {t('+ Marcar un lugar propio en el mapa')}
                   </button>
                 )}
               </>
@@ -203,8 +203,8 @@ function CombineSection({ uid, geo, entry, entries, summaries, basePath }: { uid
   const gz = useGazetteer()
   return (
     <section className="panel__section">
-      <h3 className="panel__h3">Combínalo con</h3>
-      {gz ? <SuggestionList geo={geo} suggestions={combineWith(geo, entry, entries, summaries, gz, 6)} basePath={basePath} uid={uid} /> : <p className="mono muted panel__small">Buscando lugares cercanos…</p>}
+      <h3 className="panel__h3">{t('Combínalo con')}</h3>
+      {gz ? <SuggestionList geo={geo} suggestions={combineWith(geo, entry, entries, summaries, gz, 6)} basePath={basePath} uid={uid} /> : <p className="mono muted panel__small">{t('Buscando lugares cercanos…')}</p>}
     </section>
   )
 }
@@ -216,15 +216,15 @@ function EntryView({ entry, trips, onEdit }: { entry: Entry; trips: Trip[]; onEd
       <div className="panel__row">
         <span className="badge badge--ink">{STATUS_LABEL[entry.status]}</span>
         {entry.status === 'wishlist' && entry.priority && (
-          <span className="badge">Prioridad {['', 'alta', 'media', 'baja'][entry.priority]}</span>
+          <span className="badge">{t(['', 'Prioridad alta', 'Prioridad media', 'Prioridad baja'][entry.priority])}</span>
         )}
         <Stars value={entry.rating} />
-        {onEdit && <button type="button" className="btn btn--small panel__edit" onClick={onEdit}>Editar</button>}
+        {onEdit && <button type="button" className="btn btn--small panel__edit" onClick={onEdit}>{t('Editar')}</button>}
       </div>
       <PhotoGallery photos={entryPhotos(entry)} title={entry.name} />
       {entry.dates.length > 0 && (
         <div>
-          <h3 className="label">Fechas · {totalDays} días</h3>
+          <h3 className="label">{t('Fechas')} · {tn(totalDays, '{n} día', '{n} días')}</h3>
           <ul className="panel__dates mono">
             {entry.dates.map((r, i) => (
               <li key={i}>
@@ -238,7 +238,7 @@ function EntryView({ entry, trips, onEdit }: { entry: Entry; trips: Trip[]; onEd
       {entry.description && <Markdown source={entry.description} />}
       {(entry.people || entry.tags.length > 0) && (
         <div className="panel__row">
-          {entry.people && <span className="mono panel__small">Con: {entry.people}</span>}
+          {entry.people && <span className="mono panel__small">{t('Con: {people}', { people: entry.people })}</span>}
           {entry.tags.map((t) => (
             <span key={t} className="badge">#{t}</span>
           ))}
@@ -251,18 +251,18 @@ function EntryView({ entry, trips, onEdit }: { entry: Entry; trips: Trip[]; onEd
 function CountryFacts({ geo, countryId }: { geo: Geo; countryId: string }) {
   const c = geo.countries[countryId]
   const facts: [string, string | null][] = [
-    ['Continente', CONTINENTS[c.continent]],
-    ['Capital', c.capital],
-    ['Depende de', c.sovereign ? geo.countries[c.sovereign]?.name ?? c.sovereign : null],
-    ['Población', c.population ? formatNumber(c.population) : null],
-    ['Superficie', c.areaKm2 ? `${formatNumber(c.areaKm2)} km²` : null],
-    ['Moneda', c.currency ? `${c.currency.name} (${c.currency.code})` : null],
-    ['Idiomas', c.languages.length ? c.languages.map(langName).join(', ') : null],
-    ['Prefijo', c.phone ? `+${c.phone.replace(/^\+/, '')}` : null],
+    [t('Continente'), CONTINENTS[c.continent]],
+    [t('Capital'), c.capital],
+    [t('Depende de'), c.sovereign ? geo.countries[c.sovereign]?.name ?? c.sovereign : null],
+    [t('Población'), c.population ? formatNumber(c.population) : null],
+    [t('Superficie'), c.areaKm2 ? `${formatNumber(c.areaKm2)} km²` : null],
+    [t('Moneda'), c.currency ? `${c.currency.name} (${c.currency.code})` : null],
+    [t('Idiomas'), c.languages.length ? c.languages.map(langName).join(', ') : null],
+    [t('Prefijo'), c.phone ? `+${c.phone.replace(/^\+/, '')}` : null],
   ]
   return (
     <section className="panel__section">
-      <h3 className="panel__h3">Datos</h3>
+      <h3 className="panel__h3">{t('Datos')}</h3>
       <dl className="facts">
         {facts
           .filter(([, v]) => v)

@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import type { Geo } from '../lib/geo'
 import type { JourneyStop } from '../lib/journey'
 import { flagEmoji } from '../lib/model'
+import { locale, t, tn } from '../lib/i18n'
 import './ReplayBar.css'
 
 export interface ReplayState {
@@ -58,11 +59,11 @@ export function ReplayBar({ geo, stops, state, countriesSoFar, onChange, onClose
   const date = stop ? new Date(`${stop.date}T00:00:00`) : null
 
   return (
-    <div className="replay" role="region" aria-label="Repetición de viajes">
+    <div className="replay" role="region" aria-label={t('Repetición de viajes')}>
       <button
         type="button"
         className="replay__play"
-        aria-label={state.playing ? 'Pausar' : 'Reproducir'}
+        aria-label={state.playing ? t('Pausar') : t('Reproducir')}
         onClick={() => onChange({ ...state, playing: !state.playing, t: !state.playing && state.t >= last ? 0 : state.t })}
       >
         {state.playing ? '❚❚' : '▶'}
@@ -71,13 +72,13 @@ export function ReplayBar({ geo, stops, state, countriesSoFar, onChange, onClose
       <div className="replay__now" aria-live="polite">
         <span className="replay__year">{date?.getFullYear()}</span>
         <span className="replay__date mono">
-          {date?.toLocaleDateString('es', { day: 'numeric', month: 'short' })}
+          {date?.toLocaleDateString(locale(), { day: 'numeric', month: 'short' })}
           {stop && <> · {flagEmoji(geo.countries[stop.countryId]?.iso2 ?? null)} {stop.name}</>}
         </span>
       </div>
 
       <label className="replay__scrub">
-        <span className="visually-hidden">Posición en el recorrido</span>
+        <span className="visually-hidden">{t('Posición en el recorrido')}</span>
         <input
           type="range"
           min={0}
@@ -87,11 +88,11 @@ export function ReplayBar({ geo, stops, state, countriesSoFar, onChange, onClose
           onChange={(e) => onChange({ ...state, t: Number(e.target.value), playing: false })}
         />
         <span className="replay__count mono">
-          {Math.floor(state.t) + 1}/{stops.length} · {countriesSoFar} países
+          {Math.floor(state.t) + 1}/{stops.length} · {tn(countriesSoFar, '{n} país', '{n} países')}
         </span>
       </label>
 
-      <div className="replay__speed" role="group" aria-label="Velocidad">
+      <div className="replay__speed" role="group" aria-label={t('Velocidad')}>
         {([1, 2, 4] as const).map((sp) => (
           <button key={sp} type="button" aria-pressed={state.speed === sp} onClick={() => onChange({ ...state, speed: sp })}>
             {sp}×
@@ -99,7 +100,7 @@ export function ReplayBar({ geo, stops, state, countriesSoFar, onChange, onClose
         ))}
       </div>
 
-      <button type="button" className="replay__close" aria-label="Cerrar repetición" onClick={onClose}>×</button>
+      <button type="button" className="replay__close" aria-label={t('Cerrar repetición')} onClick={onClose}>×</button>
     </div>
   )
 }

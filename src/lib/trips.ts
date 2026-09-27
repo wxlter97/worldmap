@@ -2,6 +2,8 @@
 import type { Geo } from './geo'
 import type { DateRange, Entry, Trip } from './model'
 import { uniqueDays } from './stats'
+import { locale } from './i18n'
+import { t } from './i18n'
 
 export interface TripStop {
   entry: Entry
@@ -60,9 +62,9 @@ export function summarizeTrip(geo: Geo, trip: Trip, entries: Entry[]): TripSumma
 }
 
 export function formatTripRange(start: string | null, end: string | null): string {
-  if (!start) return 'Sin fechas'
+  if (!start) return t('Sin fechas')
   const fmt = (s: string, withYear: boolean) =>
-    new Date(`${s}T00:00:00`).toLocaleDateString('es', { day: 'numeric', month: 'short', ...(withYear ? { year: 'numeric' } : {}) })
+    new Date(`${s}T00:00:00`).toLocaleDateString(locale(), { day: 'numeric', month: 'short', ...(withYear ? { year: 'numeric' } : {}) })
   if (!end || end === start) return fmt(start, true)
   const sameYear = start.slice(0, 4) === end.slice(0, 4)
   return `${fmt(start, !sameYear)} – ${fmt(end, true)}`

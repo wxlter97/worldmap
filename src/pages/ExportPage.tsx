@@ -4,9 +4,9 @@ import { backupToJson, download, entriesToCsv, parseBackup, restoreBackup, today
 import { buildJourney, journeyArcs } from '../lib/journey'
 import { POSTER_FORMATS, POSTER_THEMES, renderPoster, type PosterTheme } from '../lib/poster'
 import { computeStats } from '../lib/stats'
+import { locale, t, tn } from '../lib/i18n'
 import './ExportPage.css'
 
-const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
 
 export function ExportPage() {
   const { geo, entries, trips, summaries, profile, uid } = useAppData()
@@ -73,10 +73,10 @@ export function ExportPage() {
     setImporting(true)
     try {
       await restoreBackup(uid, pending)
-      setImported(`Importados ${plural(pending.entries.length, 'lugar', 'lugares')} y ${plural(pending.trips.length, 'viaje', 'viajes')}.`)
+      setImported(t('Importados: {places} y {trips}.', { places: tn(pending.entries.length, '{n} lugar', '{n} lugares'), trips: tn(pending.trips.length, '{n} viaje', '{n} viajes') }))
       setPending(null)
     } catch {
-      setImportError('No se pudo importar. Revisa tu conexión e inténtalo otra vez: lo ya escrito se conserva.')
+      setImportError(t('No se pudo importar. Revisa tu conexión e inténtalo otra vez: lo ya escrito se conserva.'))
     } finally {
       setImporting(false)
     }
@@ -88,73 +88,72 @@ export function ExportPage() {
   return (
     <div className="export-page">
       <div className="export-page__head">
-        <h1>Exportar</h1>
-        <span className="label muted">Póster · CSV · copia de seguridad</span>
+        <h1>{t('Exportar')}</h1>
+        <span className="label muted">{t('Póster · CSV · copia de seguridad')}</span>
       </div>
 
       <section className="export-section">
-        <h2>Póster</h2>
+        <h2>{t('Póster')}</h2>
         <div className="poster">
           <div className="poster__controls">
             <label className="field">
-              <span>Formato</span>
+              <span>{t('Formato')}</span>
               <select value={formatId} onChange={(e) => setFormatId(e.target.value)}>
                 {POSTER_FORMATS.map((f) => (
-                  <option key={f.id} value={f.id}>{f.label}</option>
+                  <option key={f.id} value={f.id}>{t(f.label)}</option>
                 ))}
               </select>
             </label>
             <div className="field">
-              <span>Estilo</span>
-              <div className="tabs" role="radiogroup" aria-label="Estilo del póster">
-                {POSTER_THEMES.map((t) => (
-                  <button key={t.id} type="button" role="radio" aria-checked={theme === t.id} aria-selected={theme === t.id} onClick={() => setTheme(t.id)}>
-                    {t.label}
+              <span>{t('Estilo')}</span>
+              <div className="tabs" role="radiogroup" aria-label={t('Estilo del póster')}>
+                {POSTER_THEMES.map((th) => (
+                  <button key={th.id} type="button" role="radio" aria-checked={theme === th.id} aria-selected={theme === th.id} onClick={() => setTheme(th.id)}>
+                    {t(th.label)}
                   </button>
                 ))}
               </div>
             </div>
             <label className="export-toggle">
-              <button type="button" className="toggle" role="switch" aria-checked={withLines} aria-label="Incluir líneas de viaje" onClick={() => setWithLines(!withLines)} />
-              <span className="mono">Líneas de viaje</span>
+              <button type="button" className="toggle" role="switch" aria-checked={withLines} aria-label={t('Incluir líneas de viaje')} onClick={() => setWithLines(!withLines)} />
+              <span className="mono">{t('Líneas de viaje')}</span>
             </label>
             {!profile.displayName && (
-              <p className="mono muted export-small">Añade tu nombre en Cuenta para que aparezca en el póster.</p>
+              <p className="mono muted export-small">{t('Añade tu nombre en Cuenta para que aparezca en el póster.')}</p>
             )}
             <button type="button" className="btn btn--primary" onClick={downloadPoster} disabled={rendering}>
-              {rendering ? 'Dibujando…' : 'Descargar PNG'}
+              {rendering ? t('Dibujando…') : t('Descargar PNG')}
             </button>
           </div>
           <div className="poster__preview">
-            <canvas ref={canvasRef} aria-label="Vista previa del póster" />
+            <canvas ref={canvasRef} aria-label={t('Vista previa del póster')} />
           </div>
         </div>
       </section>
 
       <section className="export-section">
-        <h2>Datos</h2>
+        <h2>{t('Datos')}</h2>
         <p className="export-copy">
-          <strong>CSV</strong> para Excel o Google Sheets: una fila por visita, con fechas, viaje, etiquetas y notas.{' '}
-          <strong>JSON</strong> es la copia de seguridad completa: sirve para restaurar tu mapa.
+          <strong>CSV</strong> {t('para Excel o Google Sheets: una fila por visita, con fechas, viaje, etiquetas y notas.')}{' '}
+          <strong>JSON</strong> {t('es la copia de seguridad completa: sirve para restaurar tu mapa.')}
         </p>
         <div className="export-row">
           <button type="button" className="btn" onClick={() => download(`mapa-wxlter-${today()}.csv`, entriesToCsv(geo, entries, trips))}>
-            Descargar CSV
+            {t('Descargar CSV')}
           </button>
           <button type="button" className="btn" onClick={() => download(`mapa-wxlter-copia-${today()}.json`, backupToJson(entries, trips))}>
-            Descargar copia JSON
+            {t('Descargar copia JSON')}
           </button>
         </div>
       </section>
 
       <section className="export-section">
-        <h2>Restaurar copia</h2>
+        <h2>{t('Restaurar copia')}</h2>
         <p className="export-copy">
-          Importa un JSON exportado desde aquí. Los lugares y viajes con la misma clave se sobrescriben; el resto de tu
-          mapa no se toca. Las fotos solo se ven si la copia viene de esta misma cuenta.
+          {t('Importa un JSON exportado desde aquí. Los lugares y viajes con la misma clave se sobrescriben; el resto de tu mapa no se toca. Las fotos solo se ven si la copia viene de esta misma cuenta.')}
         </p>
         <label className="btn export-file">
-          Elegir archivo JSON
+          {t('Elegir archivo JSON')}
           <input type="file" accept="application/json,.json" className="visually-hidden" onChange={(e) => onFile(e.target.files?.[0])} />
         </label>
         {importError && <p className="notice notice--error" role="alert">{importError}</p>}
@@ -162,15 +161,18 @@ export function ExportPage() {
         {pending && (
           <div className="notice export-confirm">
             <p>
-              La copia del {new Date(pending.exportedAt).toLocaleDateString('es', { day: 'numeric', month: 'long', year: 'numeric' })} tiene{' '}
-              <strong>{plural(pending.entries.length, 'lugar', 'lugares')}</strong> y <strong>{plural(pending.trips.length, 'viaje', 'viajes')}</strong>.
-              {overwrites > 0 && ` ${overwrites === 1 ? '1 lugar ya existe y se reemplazará.' : `${overwrites} lugares ya existen y se reemplazarán.`}`}
+              {t('La copia del {date} tiene {places} y {trips}.', {
+                date: new Date(pending.exportedAt).toLocaleDateString(locale(), { day: 'numeric', month: 'long', year: 'numeric' }),
+                places: tn(pending.entries.length, '{n} lugar', '{n} lugares'),
+                trips: tn(pending.trips.length, '{n} viaje', '{n} viajes'),
+              })}
+              {overwrites > 0 && ` ${tn(overwrites, '{n} lugar ya existe y se reemplazará.', '{n} lugares ya existen y se reemplazarán.')}`}
             </p>
             <div className="export-row">
               <button type="button" className="btn btn--primary" disabled={importing} onClick={runImport}>
-                {importing ? 'Importando…' : 'Importar'}
+                {importing ? t('Importando…') : t('Importar')}
               </button>
-              <button type="button" className="btn" disabled={importing} onClick={() => setPending(null)}>Cancelar</button>
+              <button type="button" className="btn" disabled={importing} onClick={() => setPending(null)}>{t('Cancelar')}</button>
             </div>
           </div>
         )}

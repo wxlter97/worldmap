@@ -1,5 +1,6 @@
 import * as maplibregl from 'maplibre-gl'
 import type { GeoJSONSource, MapLayerMouseEvent } from 'maplibre-gl'
+import { t } from '../lib/i18n'
 import 'maplibre-gl/dist/maplibre-gl.css'
 // Vite empaqueta el worker de MapLibre aparte; su ruta relativa por defecto no sobrevive al bundling.
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
@@ -8,7 +9,7 @@ import type { Feature, FeatureCollection, MultiPolygon, Point, Polygon } from 'g
 import { loadAdmin1, type Geo } from '../lib/geo'
 import { readPref, writePref } from '../lib/prefs'
 import { useTheme, type Theme } from '../lib/theme'
-import { BEEN_STATUSES, type CountrySummary, type Entry } from '../lib/model'
+import { BEEN_STATUSES, STATUS_LABEL, type CountrySummary, type Entry } from '../lib/model'
 import './MapView.css'
 
 export type MapSelection =
@@ -437,28 +438,28 @@ export function MapView({ geo, entries, summaries, selectedCountry, focus, onSel
   return (
     <div className={replaying ? 'map-wrap map-wrap--replay' : 'map-wrap'}>
       <div ref={container} className="map" />
-      <div className="map-legend" aria-label="Leyenda" hidden={replaying}>
+      <div className="map-legend" aria-label={t('Leyenda')} hidden={replaying}>
         {scratch ? (
           <>
-            <span><i className="sw sw--foil" />Por raspar</span>
-            <span><i className="sw sw--visited" />Raspado (Vivido o Visitado)</span>
+            <span><i className="sw sw--foil" />{t('Por raspar')}</span>
+            <span><i className="sw sw--visited" />{t('Raspado (Vivido o Visitado)')}</span>
           </>
         ) : (
           <>
-            <span><i className="sw sw--lived" />Vivido</span>
-            <span><i className="sw sw--visited" />Visitado</span>
-            <span><i className="sw sw--transit" />Escala</span>
-            <span><i className="sw sw--planned" />Planeado</span>
-            <span><i className="sw sw--wishlist" />Quiero ir</span>
+            <span><i className="sw sw--lived" />{STATUS_LABEL.lived}</span>
+            <span><i className="sw sw--visited" />{STATUS_LABEL.visited}</span>
+            <span><i className="sw sw--transit" />{STATUS_LABEL.transit}</span>
+            <span><i className="sw sw--planned" />{STATUS_LABEL.planned}</span>
+            <span><i className="sw sw--wishlist" />{STATUS_LABEL.wishlist}</span>
           </>
         )}
       </div>
       <div className="map-modes">
         <button type="button" className="btn btn--small" aria-pressed={scratch} onClick={() => setScratch((v) => !v)}>
-          {scratch ? 'Normal' : 'Raspar'}
+          {scratch ? t('Normal') : t('Raspar')}
         </button>
         <button type="button" className="btn btn--small" onClick={() => setGlobe((g) => !g)}>
-          {globe ? 'Plano' : 'Globo'}
+          {globe ? t('Plano') : t('Globo')}
         </button>
       </div>
     </div>

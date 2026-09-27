@@ -1,9 +1,10 @@
 // Carga de los datos geográficos generados por scripts/build-data.mjs (public/data).
 import type { FeatureCollection, MultiPolygon, Polygon } from 'geojson'
+import { translated } from './i18n'
 
 export type ContinentId = 'AF' | 'AN' | 'AS' | 'EU' | 'NA' | 'OC' | 'SA'
 
-export const CONTINENTS: Record<ContinentId, string> = {
+const CONTINENTS_ES: Record<ContinentId, string> = {
   AF: 'África',
   AN: 'Antártida',
   AS: 'Asia',
@@ -12,6 +13,8 @@ export const CONTINENTS: Record<ContinentId, string> = {
   OC: 'Oceanía',
   SA: 'América del Sur',
 }
+
+export const CONTINENTS = translated(CONTINENTS_ES)
 
 export interface Country {
   id: string // ISO3

@@ -1,6 +1,7 @@
 import { StrictMode, useEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Link, Navigate, Route, Routes, useParams } from 'react-router-dom'
+import { t, useLang } from './lib/i18n'
 import './styles/tokens.css'
 import './styles/base.css'
 import { AppDataProvider } from './app/AppData'
@@ -40,7 +41,7 @@ function PrivateApp() {
   useEffect(() => {
     if (user) void ensureProfile(user.uid)
   }, [user])
-  if (loading) return <p className="screen-msg mono">Cargando…</p>
+  if (loading) return <p className="screen-msg mono">{t('Cargando…')}</p>
   if (!user) return <LoginPage />
   return (
     <AppDataProvider uid={user.uid} readOnly={false} basePath="">
@@ -56,11 +57,11 @@ function SharedApp() {
     resolveShare(token).then(setShare, () => setShare(null))
   }, [token])
 
-  if (share === undefined) return <p className="screen-msg mono">Cargando mapa compartido…</p>
+  if (share === undefined) return <p className="screen-msg mono">{t('Cargando mapa compartido…')}</p>
   if (share === null) {
     return (
       <div className="screen-msg notice notice--error">
-        Este link ya no está activo. Pide a quien te lo envió un link nuevo. <Link to="/">Ir a mi mapa</Link>
+        {t('Este link ya no está activo. Pide a quien te lo envió un link nuevo.')} <Link to="/">{t('Ir a mi mapa')}</Link>
       </div>
     )
   }
@@ -72,6 +73,12 @@ function SharedApp() {
 }
 
 function App() {
+  // Cambiar de idioma vuelve a montar la app con los textos nuevos.
+  const lang = useLang()
+  return <AppRoutes key={lang} />
+}
+
+function AppRoutes() {
   if (!firebaseConfigured) {
     return (
       <p className="screen-msg notice notice--error">

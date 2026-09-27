@@ -1,6 +1,7 @@
 // Exportación (CSV, JSON) e importación de copias de seguridad.
 import { CONTINENTS, type Geo } from './geo'
 import { PLACE_TYPE_LABEL, STATUSES, STATUS_LABEL, rangeDays, type Entry, type PlaceType, type Trip } from './model'
+import { getLang, t } from './i18n'
 
 export function download(filename: string, data: Blob) {
   const url = URL.createObjectURL(data)
@@ -24,7 +25,10 @@ const csvCell = (v: unknown) => {
 /** Una fila por rango de fechas (o una sola fila si el lugar no tiene fechas). BOM para que Excel lea UTF-8. */
 export function entriesToCsv(geo: Geo, entries: Entry[], trips: Trip[]): Blob {
   const tripName = new Map(trips.map((t) => [t.id, t.name]))
-  const header = ['tipo', 'nombre', 'pais', 'region', 'continente', 'estado', 'desde', 'hasta', 'dias', 'viaje', 'etiquetas', 'valoracion', 'con_quien', 'descripcion', 'fotos', 'lat', 'lon', 'clave']
+  const header =
+    getLang() === 'es'
+      ? ['tipo', 'nombre', 'pais', 'region', 'continente', 'estado', 'desde', 'hasta', 'dias', 'viaje', 'etiquetas', 'valoracion', 'con_quien', 'descripcion', 'fotos', 'lat', 'lon', 'clave']
+      : ['type', 'name', 'country', 'region', 'continent', 'status', 'from', 'to', 'days', 'trip', 'tags', 'rating', 'with', 'description', 'photos', 'lat', 'lon', 'key']
   const rows = [header]
   const sorted = [...entries].sort((a, b) => (a.dates[0]?.start ?? '9').localeCompare(b.dates[0]?.start ?? '9') || a.name.localeCompare(b.name, 'es'))
   for (const e of sorted) {
@@ -67,21 +71,21 @@ export function parseBackup(text: string): { backup: Backup } | { error: string 
   try {
     data = JSON.parse(text)
   } catch {
-    return { error: 'El archivo no es JSON válido. Elige un archivo exportado desde esta app.' }
+    return { error: t('El archivo no es JSON válido. Elige un archivo exportado desde esta app.') }
   }
   const b = data as Partial<Backup>
   if (b?.app !== 'wxlter-mapa' || !Array.isArray(b.entries) || !Array.isArray(b.trips)) {
-    return { error: 'El archivo no es una copia de seguridad de este mapa. Usa el JSON de «Copia de seguridad».' }
+    return { error: t('El archivo no es una copia de seguridad de este mapa. Usa el JSON de «Copia de seguridad».') }
   }
   for (const e of b.entries) {
     const ok =
       typeof e?.key === 'string' && TYPES.includes(e.type) && typeof e.placeId === 'string' && typeof e.name === 'string' &&
       typeof e.countryId === 'string' && (STATUSES as readonly string[]).includes(e.status) && Array.isArray(e.dates) &&
       e.dates.every((d) => DATE.test(d?.start) && DATE.test(d?.end || d?.start)) && e.key === `${e.type}:${e.placeId}`
-    if (!ok) return { error: `La entrada «${e?.name ?? e?.key ?? '?'}» está incompleta o dañada. Revisa el archivo.` }
+    if (!ok) return { error: t('La entrada «{name}» está incompleta o dañada. Revisa el archivo.', { name: e?.name ?? e?.key ?? '?' }) }
   }
-  for (const t of b.trips) {
-    if (typeof t?.id !== 'string' || typeof t.name !== 'string') return { error: 'Un viaje del archivo está incompleto. Revisa el archivo.' }
+  for (const trip of b.trips) {
+    if (typeof trip?.id !== 'string' || typeof trip.name !== 'string') return { error: t('Un viaje del archivo está incompleto. Revisa el archivo.') }
   }
   return { backup: b as Backup }
 }
