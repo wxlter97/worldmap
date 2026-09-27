@@ -112,9 +112,10 @@ export function EntryEditor({ uid, entry, isNew, trips, defaultTripId = null, on
         {draft.dates.length === 0 && <p className="muted mono editor__hint">{t('Sin fechas. Añade una o varias visitas.')}</p>}
         <ul className="editor__dates">
           {draft.dates.map((r, i) => (
-            <li key={`${r.start}-${i}`}>
-              <span>
-                {formatRange(r)} <span className="muted">· {rangeDays(r)} d</span>
+            <li key={`${r.start}-${i}`} className="editor__date">
+              <span className="editor__date-main">
+                <span className="editor__date-range">{formatRange(r)}</span>
+                <span className="muted">{tn(rangeDays(r), '{n} día', '{n} días')}</span>
               </span>
               {trips.length > 0 && (
                 <select
@@ -129,7 +130,7 @@ export function EntryEditor({ uid, entry, isNew, trips, defaultTripId = null, on
                   ))}
                 </select>
               )}
-              <button type="button" className="icon-btn" aria-label={t('Quitar {fechas}', { fechas: formatRange(r) })} onClick={() => set('dates', draft.dates.filter((_, j) => j !== i))}>
+              <button type="button" className="icon-btn editor__date-remove" aria-label={t('Quitar {fechas}', { fechas: formatRange(r) })} onClick={() => set('dates', draft.dates.filter((_, j) => j !== i))}>
                 ×
               </button>
             </li>
@@ -138,13 +139,22 @@ export function EntryEditor({ uid, entry, isNew, trips, defaultTripId = null, on
         <div className="editor__range">
           <label className={`field ${rangeError ? 'field--error' : ''}`}>
             <span>{t('Desde')}</span>
-            <input type="date" value={newRange.start} onChange={(e) => setNewRange({ ...newRange, start: e.target.value })} />
+            <input
+              type="date"
+              value={newRange.start}
+              onChange={(e) => {
+                const start = e.target.value
+                // El fin sigue al inicio: así el selector de «Hasta» abre en el mismo mes, no en hoy.
+                const end = !newRange.end || newRange.end < start ? start : newRange.end
+                setNewRange({ ...newRange, start, end })
+              }}
+            />
           </label>
           <label className="field">
             <span>{t('Hasta')}</span>
             <input type="date" value={newRange.end} min={newRange.start} onChange={(e) => setNewRange({ ...newRange, end: e.target.value })} />
           </label>
-          <label className="field">
+          <label className="field editor__range-wide">
             <span>{t('Viaje')}</span>
             <select
               value={newRange.tripId ?? ''}
@@ -165,7 +175,7 @@ export function EntryEditor({ uid, entry, isNew, trips, defaultTripId = null, on
               <option value={NEW_TRIP}>{t('+ Nuevo viaje…')}</option>
             </select>
           </label>
-          <button type="button" className="btn" onClick={addRange}>{t('Añadir fecha')}</button>
+          <button type="button" className="btn editor__range-wide" onClick={addRange}>{t('Añadir fecha')}</button>
         </div>
         {rangeError && <p className="field-error">{rangeError}</p>}
       </section>

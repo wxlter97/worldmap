@@ -8,6 +8,8 @@
 .map-page__side {
   border-right: var(--border);
   overflow-y: auto;
+  overflow-x: hidden; /* ningún campo debe hacer «bailar» el panel de lado */
+  position: relative; /* contiene los .visually-hidden (si no, alargan el documento y la página se desplaza) */
   background: var(--bg);
   min-height: 0;
 }

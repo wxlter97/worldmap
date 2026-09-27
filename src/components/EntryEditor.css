@@ -41,44 +41,62 @@
   gap: 6px;
 }
 
-.editor__dates li {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--sp-2);
-  padding-left: 12px;
+.editor__date {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'main remove'
+    'trip trip';
   border: var(--border);
   background: var(--surface);
   font-family: var(--font-mono);
   font-size: 13px;
 }
 
-.editor__dates li > span {
+.editor__date-main {
+  grid-area: main;
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  align-items: center;
+  align-items: baseline;
+  gap: 2px 10px;
+  padding: 10px 12px;
+  min-width: 0;
+}
+
+.editor__date-range {
+  font-weight: 700;
+}
+
+.editor__date-remove {
+  grid-area: remove;
+  border-width: 0 0 0 2px;
+  align-self: stretch;
+  height: auto;
 }
 
 .editor__date-trip {
-  margin-left: auto;
-  max-width: 45%;
-  min-height: 32px;
-  border: 2px solid var(--line-soft);
+  grid-area: trip;
+  width: 100%;
+  min-width: 0;
+  min-height: 40px;
+  padding: 6px 12px;
+  border: 0;
+  border-top: 2px solid var(--subtle);
   background: var(--surface);
+  color: var(--fg);
   font-family: var(--font-mono);
-  font-size: 11px;
-}
-
-.editor__dates .icon-btn {
-  border-width: 0 0 0 2px;
+  font-size: 12px;
 }
 
 .editor__range {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-  gap: var(--sp-2);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sp-3) var(--sp-2);
   align-items: end;
+}
+
+.editor__range-wide {
+  grid-column: 1 / -1;
 }
 
 .editor__row {

@@ -31,6 +31,18 @@ export function SearchBox({ geo, entries, onPick, countryId, types, placeholder,
   const [open, setOpen] = useState(false)
   const listId = useId()
   const inputRef = useRef<HTMLInputElement>(null)
+  const rootRef = useRef<HTMLDivElement>(null)
+
+  // La lista se cierra al tocar fuera, no al perder el foco: en iOS cerrar el teclado quita el foco
+  // y no dejaría desplazar los resultados.
+  useEffect(() => {
+    if (!open) return
+    const onDown = (e: PointerEvent) => {
+      if (!rootRef.current?.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('pointerdown', onDown)
+    return () => document.removeEventListener('pointerdown', onDown)
+  }, [open])
 
   const activeTypes = types ?? FILTERS[filter].types
   const byKey = new Map(entries.map((e) => [e.key, e]))
@@ -65,7 +77,7 @@ export function SearchBox({ geo, entries, onPick, countryId, types, placeholder,
   }
 
   return (
-    <div className="search">
+    <div className="search" ref={rootRef}>
       <label className="visually-hidden" htmlFor={listId + '-input'}>{t('Buscar')}</label>
       <input
         ref={inputRef}
@@ -85,7 +97,6 @@ export function SearchBox({ geo, entries, onPick, countryId, types, placeholder,
           setOpen(true)
         }}
         onFocus={() => setOpen(true)}
-        onBlur={() => setTimeout(() => setOpen(false), 150)}
         onKeyDown={(e) => {
           if (e.key === 'ArrowDown') setActive((a) => Math.min(a + 1, results.length - 1))
           else if (e.key === 'ArrowUp') setActive((a) => Math.max(a - 1, 0))

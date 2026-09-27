@@ -21,6 +21,7 @@
   top: calc(100% + 4px);
   max-height: min(60vh, 440px);
   overflow-y: auto;
+  overscroll-behavior: contain; /* desplazar la lista no mueve la página */
   margin: 0;
   padding: 0;
   list-style: none;

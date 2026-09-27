@@ -50,6 +50,8 @@ a {
 
 .visually-hidden {
   position: absolute;
+  top: 0;
+  left: 0;
   width: 1px;
   height: 1px;
   overflow: hidden;
@@ -117,7 +119,7 @@ a {
 
 .btn--ink:hover {
   background: var(--brand-faro);
-  color: var(--fg);
+  color: var(--on-faro);
 }
 
 .btn--danger {
@@ -247,7 +249,7 @@ a {
 .badge--faro {
   background: var(--brand-faro);
   border-color: var(--fg);
-  color: var(--fg);
+  color: var(--on-faro);
 }
 
 .badge--ink {
@@ -402,4 +404,25 @@ a {
   textarea {
     font-size: 16px !important;
   }
+}
+
+/* iOS: los campos de fecha tienen un ancho mínimo nativo que desborda el contenedor. */
+input[type='date'],
+input[type='time'] {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  text-align: left;
+}
+
+input[type='date']::-webkit-date-and-time-value {
+  text-align: left;
+}
+
+.field input,
+.field select,
+.field textarea {
+  max-width: 100%;
 }
