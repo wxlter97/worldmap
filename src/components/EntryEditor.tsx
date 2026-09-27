@@ -1,24 +1,29 @@
 import { useEffect, useState } from 'react'
-import { photoUrl, removePhoto, uploadPhoto } from '../lib/data'
+import { newTrip, photoUrl, removePhoto, saveTrip, uploadPhoto } from '../lib/data'
 import { STATUSES, STATUS_LABEL, formatRange, rangeDays, type DateRange, type Entry, type Trip } from '../lib/model'
 import { Markdown } from './ui'
 import './EntryEditor.css'
+
+const NEW_TRIP = '__new__'
+// El viaje recién creado puede tardar un instante en llegar por la suscripción.
+const pendingTrip = (id: string | null | undefined, trips: Trip[]) => !!id && !trips.some((t) => t.id === id)
 
 interface Props {
   uid: string
   entry: Entry
   isNew: boolean
   trips: Trip[]
+  defaultTripId?: string | null // viaje abierto en el mapa: se preselecciona para fechas nuevas
   onSave: (e: Entry) => void
   onDelete: () => void
   onCancel: () => void
 }
 
-export function EntryEditor({ uid, entry, isNew, trips, onSave, onDelete, onCancel }: Props) {
+export function EntryEditor({ uid, entry, isNew, trips, defaultTripId = null, onSave, onDelete, onCancel }: Props) {
   const [draft, setDraft] = useState<Entry>(entry)
   const [tagsText, setTagsText] = useState(entry.tags.join(', '))
   const [preview, setPreview] = useState(false)
-  const [newRange, setNewRange] = useState<DateRange>({ start: '', end: '', tripId: null })
+  const [newRange, setNewRange] = useState<DateRange>({ start: '', end: '', tripId: defaultTripId })
   const [rangeError, setRangeError] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
   const [photoError, setPhotoError] = useState<string | null>(null)
@@ -56,8 +61,6 @@ export function EntryEditor({ uid, entry, isNew, trips, onSave, onDelete, onCanc
     onSave({ ...draft, tags })
   }
 
-  const tripName = (id?: string | null) => trips.find((t) => t.id === id)?.name
-
   return (
     <form className="editor" onSubmit={submit}>
       <fieldset className="editor__status">
@@ -91,8 +94,20 @@ export function EntryEditor({ uid, entry, isNew, trips, onSave, onDelete, onCanc
             <li key={`${r.start}-${i}`}>
               <span>
                 {formatRange(r)} <span className="muted">· {rangeDays(r)} d</span>
-                {tripName(r.tripId) && <span className="badge">{tripName(r.tripId)}</span>}
               </span>
+              {trips.length > 0 && (
+                <select
+                  className="editor__date-trip"
+                  aria-label={`Viaje de ${formatRange(r)}`}
+                  value={r.tripId ?? ''}
+                  onChange={(e) => set('dates', draft.dates.map((d, j) => (j === i ? { ...d, tripId: e.target.value || null } : d)))}
+                >
+                  <option value="">Sin viaje</option>
+                  {trips.map((t) => (
+                    <option key={t.id} value={t.id}>{t.name}</option>
+                  ))}
+                </select>
+              )}
               <button type="button" className="icon-btn" aria-label={`Quitar ${formatRange(r)}`} onClick={() => set('dates', draft.dates.filter((_, j) => j !== i))}>
                 ×
               </button>
@@ -108,17 +123,27 @@ export function EntryEditor({ uid, entry, isNew, trips, onSave, onDelete, onCanc
             <span>Hasta</span>
             <input type="date" value={newRange.end} min={newRange.start} onChange={(e) => setNewRange({ ...newRange, end: e.target.value })} />
           </label>
-          {trips.length > 0 && (
-            <label className="field">
-              <span>Viaje</span>
-              <select value={newRange.tripId ?? ''} onChange={(e) => setNewRange({ ...newRange, tripId: e.target.value || null })}>
-                <option value="">—</option>
-                {trips.map((t) => (
-                  <option key={t.id} value={t.id}>{t.name}</option>
-                ))}
-              </select>
-            </label>
-          )}
+          <label className="field">
+            <span>Viaje</span>
+            <select
+              value={newRange.tripId ?? ''}
+              onChange={(e) => {
+                if (e.target.value !== NEW_TRIP) return setNewRange({ ...newRange, tripId: e.target.value || null })
+                const name = prompt('Nombre del viaje nuevo')?.trim()
+                if (!name) return
+                const trip = newTrip(name)
+                void saveTrip(uid, trip)
+                setNewRange({ ...newRange, tripId: trip.id })
+              }}
+            >
+              <option value="">Sin viaje</option>
+              {trips.map((t) => (
+                <option key={t.id} value={t.id}>{t.name}</option>
+              ))}
+              {pendingTrip(newRange.tripId, trips) && <option value={newRange.tripId!}>(nuevo viaje)</option>}
+              <option value={NEW_TRIP}>+ Nuevo viaje…</option>
+            </select>
+          </label>
           <button type="button" className="btn" onClick={addRange}>Añadir fecha</button>
         </div>
         {rangeError && <p className="field-error">{rangeError}</p>}

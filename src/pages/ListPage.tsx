@@ -4,13 +4,14 @@ import { useAppData } from '../app/AppData'
 import { Stars } from '../components/ui'
 import { CONTINENTS, type ContinentId } from '../lib/geo'
 import { PLACE_TYPE_LABEL, STATUSES, STATUS_LABEL, flagEmoji, formatRange, type PlaceType, type Status } from '../lib/model'
+import { mapLink } from '../lib/links'
 import { searchEntries } from '../lib/search'
 import './ListPage.css'
 
 type Sort = 'recent' | 'name' | 'date' | 'rating'
 
 export function ListPage() {
-  const { geo, entries } = useAppData()
+  const { geo, entries, basePath } = useAppData()
   const [query, setQuery] = useState('')
   const [status, setStatus] = useState<Status | ''>('')
   const [type, setType] = useState<PlaceType | ''>('')
@@ -105,7 +106,7 @@ export function ListPage() {
       </div>
 
       {entries.length === 0 ? (
-        <p className="notice">Todavía no hay lugares. Ve al <Link to="/">mapa</Link> y busca el primero.</p>
+        <p className="notice">Todavía no hay lugares. Ve al <Link to={basePath || '/'}>mapa</Link> y busca el primero.</p>
       ) : results.length === 0 ? (
         <p className="notice">Ningún lugar coincide con los filtros. Quita alguno para ver más.</p>
       ) : (
@@ -114,7 +115,7 @@ export function ListPage() {
             const country = geo.countries[e.countryId]
             return (
               <li key={e.key}>
-                <Link to={`/?p=${encodeURIComponent(e.key)}`} className="list-card">
+                <Link to={mapLink(basePath, `p=${encodeURIComponent(e.key)}`)} className="list-card">
                   <span className="list-card__flag" aria-hidden="true">{flagEmoji(country?.iso2 ?? null)}</span>
                   <span className="list-card__main">
                     <strong>{e.name}</strong>

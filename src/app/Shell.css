@@ -61,17 +61,17 @@
   font-weight: 700;
 }
 
-.shell__out {
+.shell__nav a.shell__account {
   background: var(--brand-faro);
   border: var(--border);
   padding: 4px 10px;
-  font: inherit;
-  cursor: pointer;
 }
 
-.shell__out:hover {
+.shell__nav a.shell__account:hover,
+.shell__nav a.shell__account.active {
   background: var(--ink);
   color: var(--brand-faro);
+  border-bottom-color: var(--ink);
 }
 
 .shell__readonly {
@@ -97,12 +97,14 @@
     padding: 0 20px;
   }
 
-  .shell__app {
+  .shell__app,
+  .shell__wordmark {
     display: none;
   }
 
   .shell__nav {
     gap: 12px;
+    font-size: 12px;
   }
 
   .shell__readonly {

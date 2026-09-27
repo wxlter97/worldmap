@@ -2,11 +2,13 @@
 import {
   collection,
   deleteDoc,
+  deleteField,
   doc,
   getDoc,
   onSnapshot,
   serverTimestamp,
   setDoc,
+  writeBatch,
 } from 'firebase/firestore'
 import { deleteObject, getDownloadURL, ref, uploadBytes } from 'firebase/storage'
 import { useEffect, useState } from 'react'
@@ -68,14 +70,87 @@ export function saveTrip(uid: string, trip: Trip) {
   return setDoc(doc(tripsCol(uid), trip.id), { ...trip, updatedAt: Date.now() })
 }
 
-export function deleteTrip(uid: string, id: string) {
-  return deleteDoc(doc(tripsCol(uid), id))
+/** Borra el viaje y quita su referencia de las fechas que lo usaban (las fechas se conservan). */
+export function deleteTrip(uid: string, id: string, entries: Entry[]) {
+  const batch = writeBatch(db)
+  for (const e of entries) {
+    if (!e.dates.some((d) => d.tripId === id)) continue
+    const dates = e.dates.map((d) => (d.tripId === id ? { ...d, tripId: null } : d))
+    batch.set(doc(entriesCol(uid), docId(e.key)), { ...e, dates, updatedAt: Date.now() })
+  }
+  batch.delete(doc(tripsCol(uid), id))
+  return batch.commit()
 }
 
-export async function ensureProfile(uid: string, email: string | null) {
+export function newTrip(name: string): Trip {
+  const now = Date.now()
+  return { id: crypto.randomUUID(), name, description: '', createdAt: now, updatedAt: now }
+}
+
+// --- Perfil y links compartidos ---
+// users/{uid} es legible por cualquiera cuando sharing.enabled = true: no guardar ahí datos privados.
+
+export interface Profile {
+  displayName: string
+  sharing: { enabled: boolean; token: string | null }
+}
+
+const DEFAULT_PROFILE: Profile = { displayName: '', sharing: { enabled: false, token: null } }
+
+export async function ensureProfile(uid: string) {
   const ref = doc(db, 'users', uid)
   const snap = await getDoc(ref).catch(() => null)
-  if (!snap?.exists()) await setDoc(ref, { email, createdAt: serverTimestamp(), sharing: { enabled: false, token: null } }, { merge: true })
+  if (snap && !snap.exists()) await setDoc(ref, { ...DEFAULT_PROFILE, createdAt: serverTimestamp() }, { merge: true })
+}
+
+export function useProfile(uid: string | null): Profile {
+  const [profile, setProfile] = useState<Profile>(DEFAULT_PROFILE)
+  useEffect(() => {
+    if (!uid) return
+    return onSnapshot(
+      doc(db, 'users', uid),
+      (snap) => setProfile({ ...DEFAULT_PROFILE, ...(snap.data() as Partial<Profile> | undefined) }),
+      () => setProfile(DEFAULT_PROFILE),
+    )
+  }, [uid])
+  return profile
+}
+
+export function saveDisplayName(uid: string, displayName: string, current: Profile) {
+  const batch = writeBatch(db)
+  batch.set(doc(db, 'users', uid), { displayName }, { merge: true })
+  if (current.sharing.enabled && current.sharing.token) batch.set(doc(db, 'shares', current.sharing.token), { displayName }, { merge: true })
+  return batch.commit()
+}
+
+const randomToken = () => {
+  const bytes = crypto.getRandomValues(new Uint8Array(12))
+  return btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+}
+
+/** Activa el link (o lo regenera: el anterior deja de funcionar). */
+export async function enableSharing(uid: string, current: Profile) {
+  const token = randomToken()
+  const batch = writeBatch(db)
+  if (current.sharing.token) batch.delete(doc(db, 'shares', current.sharing.token))
+  batch.set(doc(db, 'shares', token), { uid, displayName: current.displayName, createdAt: serverTimestamp() })
+  // email: perfiles creados antes de v0.2 lo guardaban; se elimina antes de hacerlo público.
+  batch.set(doc(db, 'users', uid), { sharing: { enabled: true, token }, email: deleteField() }, { merge: true })
+  await batch.commit()
+  return token
+}
+
+export async function disableSharing(uid: string, current: Profile) {
+  const batch = writeBatch(db)
+  if (current.sharing.token) batch.delete(doc(db, 'shares', current.sharing.token))
+  batch.set(doc(db, 'users', uid), { sharing: { enabled: false, token: null } }, { merge: true })
+  await batch.commit()
+}
+
+/** Resuelve un token de link compartido al uid del dueño. */
+export async function resolveShare(token: string): Promise<{ uid: string; displayName: string } | null> {
+  const snap = await getDoc(doc(db, 'shares', token))
+  return snap.exists() ? (snap.data() as { uid: string; displayName: string }) : null
 }
 
 // --- Fotos ---

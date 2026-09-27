@@ -24,6 +24,8 @@ interface Props {
   /** Modo "marcar lugar propio": el siguiente clic devuelve la coordenada. */
   picking?: boolean
   onPickLocation?: (lon: number, lat: number, countryId: string | null) => void
+  /** Ruta de un viaje: se dibuja en orden y la cámara la encuadra. */
+  route?: [number, number][] | null
 }
 
 maplibregl.setWorkerUrl(workerUrl)
@@ -52,7 +54,7 @@ function makePattern(kind: 'hatch-faro' | 'hatch-ink' | 'dots'): ImageData {
   return ctx.getImageData(0, 0, size, size)
 }
 
-export function MapView({ geo, entries, summaries, selectedCountry, focus, onSelect, picking = false, onPickLocation }: Props) {
+export function MapView({ geo, entries, summaries, selectedCountry, focus, onSelect, picking = false, onPickLocation, route = null }: Props) {
   const container = useRef<HTMLDivElement>(null)
   const mapRef = useRef<maplibregl.Map | null>(null)
   const [ready, setReady] = useState(false)
@@ -95,6 +97,7 @@ export function MapView({ geo, entries, summaries, selectedCountry, focus, onSel
       map.addSource('countries', { type: 'geojson', data: geo.shapes, promoteId: 'id' })
       map.addSource('regions', { type: 'geojson', data: emptyFc(), promoteId: 'id' })
       map.addSource('points', { type: 'geojson', data: emptyFc() })
+      map.addSource('route', { type: 'geojson', data: emptyFc() })
 
       map.addLayer({
         id: 'country-fill',
@@ -144,6 +147,21 @@ export function MapView({ geo, entries, summaries, selectedCountry, focus, onSel
         source: 'countries',
         filter: ['==', ['get', 'id'], ''],
         paint: { 'line-color': C.ink, 'line-width': 3 },
+      })
+      map.addLayer({
+        id: 'route-line',
+        type: 'line',
+        source: 'route',
+        filter: ['==', ['geometry-type'], 'LineString'],
+        layout: { 'line-join': 'miter', 'line-cap': 'butt' },
+        paint: { 'line-color': C.ink, 'line-width': 2.5, 'line-dasharray': [2, 1.5] },
+      })
+      map.addLayer({
+        id: 'route-stops',
+        type: 'circle',
+        source: 'route',
+        filter: ['==', ['geometry-type'], 'Point'],
+        paint: { 'circle-radius': 5, 'circle-color': C.faro, 'circle-stroke-color': C.ink, 'circle-stroke-width': 2.5 },
       })
       map.addLayer({
         id: 'points',
@@ -261,6 +279,24 @@ export function MapView({ geo, entries, summaries, selectedCountry, focus, onSel
   useEffect(() => {
     if (ready && focus) mapRef.current!.flyTo({ center: [focus.lon, focus.lat], zoom: focus.zoom, duration: 900 })
   }, [ready, focus])
+
+  // --- Ruta de viaje ---
+  const routeKey = route?.map((c) => c.join(',')).join(';') ?? ''
+  useEffect(() => {
+    if (!ready) return
+    const map = mapRef.current!
+    const coords = route ?? []
+    const features: Feature[] = coords.map((c) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: c }, properties: {} }))
+    if (coords.length > 1) features.push({ type: 'Feature', geometry: { type: 'LineString', coordinates: coords }, properties: {} })
+    ;(map.getSource('route') as GeoJSONSource).setData({ type: 'FeatureCollection', features })
+    if (coords.length === 1) map.flyTo({ center: coords[0], zoom: 5, duration: 900 })
+    else if (coords.length > 1) {
+      const bounds = coords.reduce((b, c) => b.extend(c), new maplibregl.LngLatBounds(coords[0], coords[0]))
+      map.fitBounds(bounds, { padding: 60, maxZoom: 5.5, duration: 900 })
+    }
+    // routeKey resume el contenido de la ruta.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready, routeKey])
 
   useEffect(() => {
     if (ready) mapRef.current!.setProjection({ type: globe ? 'globe' : 'mercator' })

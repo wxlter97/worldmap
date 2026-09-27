@@ -1,0 +1,98 @@
+.trips-page {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: var(--sp-8);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-6);
+}
+
+.trips-page__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: var(--sp-4);
+  padding-bottom: var(--sp-3);
+  border-bottom: var(--border-section);
+}
+
+.trips-page__head h1 {
+  font-size: clamp(28px, 4vw, 40px);
+}
+
+.trips-page__new {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+}
+
+.trips-page__new .field {
+  flex: 1 1 260px;
+}
+
+.trips-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.trip-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  border: var(--border);
+  background: var(--white);
+  text-decoration: none;
+}
+
+.trip-card__head {
+  padding: 10px 14px;
+  border-bottom: var(--border);
+  background: var(--ink);
+  color: var(--brand-faro);
+}
+
+.trip-card__body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: 14px;
+}
+
+.trip-card__name {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 22px;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+
+.trip-card__flags {
+  font-size: 20px;
+  line-height: 1.3;
+}
+
+.trip-card__foot {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  padding: 10px 14px;
+  border-top: var(--border);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.trip-card:hover .trip-card__foot {
+  background: var(--brand-faro);
+}
+
+@media (max-width: 600px) {
+  .trips-page {
+    padding: var(--sp-4) 20px;
+  }
+}

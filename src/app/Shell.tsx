@@ -1,29 +1,34 @@
-import { signOut } from 'firebase/auth'
 import { NavLink, Outlet } from 'react-router-dom'
 import { Symbol } from '../components/ui'
-import { auth } from '../lib/firebase'
+import { useAppData } from './AppData'
 import './Shell.css'
 
-export function Shell({ readOnlyOwner }: { readOnlyOwner?: string }) {
-  const base = readOnlyOwner ? `/s/${readOnlyOwner}` : ''
+/** shareName definido = vista compartida de solo lectura. */
+export function Shell({ shareName }: { shareName?: string }) {
+  const { basePath } = useAppData()
+  const home = basePath || '/'
+  const shared = shareName !== undefined
   return (
     <div className="shell">
       <header className="shell__header">
-        <NavLink to={base || '/'} className="shell__brand" aria-label="Inicio">
+        <NavLink to={home} className="shell__brand" aria-label="Inicio">
           <Symbol size={30} />
           <span className="shell__wordmark">wxlter.</span>
           <span className="label shell__app">mapa</span>
         </NavLink>
         <nav className="shell__nav" aria-label="Principal">
-          <NavLink to={base || '/'} end>Mapa</NavLink>
-          <NavLink to={`${base}/lista`}>Lista</NavLink>
-          <NavLink to={`${base}/estadisticas`}>Stats</NavLink>
-          {!readOnlyOwner && (
-            <button type="button" className="shell__out" onClick={() => signOut(auth)}>Salir</button>
-          )}
+          <NavLink to={home} end>Mapa</NavLink>
+          <NavLink to={`${basePath}/lista`}>Lista</NavLink>
+          <NavLink to={`${basePath}/viajes`}>Viajes</NavLink>
+          <NavLink to={`${basePath}/estadisticas`}>Stats</NavLink>
+          {!shared && <NavLink to="/cuenta" className="shell__account">Cuenta</NavLink>}
         </nav>
       </header>
-      {readOnlyOwner && <div className="shell__readonly label">Solo lectura · mapa compartido</div>}
+      {shared && (
+        <div className="shell__readonly label">
+          {shareName ? `Mapa de ${shareName}` : 'Mapa compartido'} · solo lectura
+        </div>
+      )}
       <main className="shell__main">
         <Outlet />
       </main>

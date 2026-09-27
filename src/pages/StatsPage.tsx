@@ -2,12 +2,13 @@ import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useAppData } from '../app/AppData'
 import { Meter, StatCard, formatNumber, formatPercent } from '../components/ui'
+import { mapLink } from '../lib/links'
 import { flagEmoji } from '../lib/model'
 import { computeStats } from '../lib/stats'
 import './StatsPage.css'
 
 export function StatsPage() {
-  const { geo, entries, summaries } = useAppData()
+  const { geo, entries, summaries, basePath } = useAppData()
   const s = useMemo(() => computeStats(geo, entries, summaries), [geo, entries, summaries])
   const maxDays = s.daysByCountry[0]?.days ?? 1
 
@@ -50,7 +51,7 @@ export function StatsPage() {
           <ul className="stats-bars">
             {s.daysByCountry.slice(0, 20).map((d) => (
               <li key={d.id}>
-                <Link className="stats-bars__name" to={`/?p=country:${d.id}`}>
+                <Link className="stats-bars__name" to={mapLink(basePath, `p=country:${d.id}`)}>
                   {flagEmoji(geo.countries[d.id]?.iso2 ?? null)} {d.name}
                 </Link>
                 <Meter percent={(d.days / maxDays) * 100} label={d.name} />
@@ -91,7 +92,7 @@ export function StatsPage() {
           <ul className="stats-wish">
             {s.wishlist.map((e) => (
               <li key={e.key}>
-                <Link to={`/?p=${encodeURIComponent(e.key)}`}>
+                <Link to={mapLink(basePath, `p=${encodeURIComponent(e.key)}`)}>
                   {flagEmoji(geo.countries[e.countryId]?.iso2 ?? null)} {e.name}
                 </Link>
                 {e.priority && <span className="badge">{['', 'Alta', 'Media', 'Baja'][e.priority]}</span>}

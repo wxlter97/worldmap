@@ -28,6 +28,8 @@ interface Props {
   summaries: Map<string, CountrySummary>
   onOpen: (p: Place) => void
   onClose: () => void
+  closeLabel?: string
+  defaultTripId?: string | null
   onStartPick?: (countryId: string) => void
 }
 
@@ -40,7 +42,7 @@ const langName = (code: string) => {
   }
 }
 
-export function PlacePanel({ uid, geo, place, entries, trips, summaries, onOpen, onClose, onStartPick }: Props) {
+export function PlacePanel({ uid, geo, place, entries, trips, summaries, onOpen, onClose, closeLabel, defaultTripId, onStartPick }: Props) {
   const key = entryKey(place.type, place.id)
   const entry = entries.find((e) => e.key === key) ?? null
   const [editing, setEditing] = useState<Entry | null>(null)
@@ -96,7 +98,9 @@ export function PlacePanel({ uid, geo, place, entries, trips, summaries, onOpen,
             )}
           </div>
         </div>
-        <button type="button" className="icon-btn" aria-label="Cerrar" onClick={onClose}>×</button>
+        <button type="button" className="icon-btn" aria-label={closeLabel ?? 'Cerrar'} title={closeLabel} onClick={onClose}>
+          {closeLabel ? '←' : '×'}
+        </button>
       </header>
 
       {summary && (
@@ -121,6 +125,7 @@ export function PlacePanel({ uid, geo, place, entries, trips, summaries, onOpen,
             entry={editing}
             isNew={!entry}
             trips={trips}
+            defaultTripId={defaultTripId}
             onCancel={() => setEditing(null)}
             onSave={(e) => {
               void saveEntry(uid!, e)

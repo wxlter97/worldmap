@@ -60,6 +60,16 @@
   align-items: center;
 }
 
+.editor__date-trip {
+  margin-left: auto;
+  max-width: 45%;
+  min-height: 32px;
+  border: 2px solid var(--ash);
+  background: var(--white);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
 .editor__dates .icon-btn {
   border-width: 0 0 0 2px;
 }

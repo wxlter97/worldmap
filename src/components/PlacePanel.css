@@ -153,3 +153,61 @@
   margin: 2px 0 0;
   font-weight: 600;
 }
+
+.panel__trip-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.itinerary {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: var(--border);
+  background: var(--white);
+}
+
+.itinerary li + li {
+  border-top: 2px solid var(--disabled-bg);
+}
+
+.itinerary button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-height: var(--touch);
+  padding: 8px 12px;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+
+.itinerary button:hover {
+  background: var(--brand-faro);
+}
+
+.itinerary__n {
+  font-size: 12px;
+  font-weight: 700;
+  width: 22px;
+  flex-shrink: 0;
+}
+
+.itinerary__main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.itinerary__main .mono {
+  font-size: 11px;
+}
+
+.itinerary button:hover .muted {
+  color: var(--ink-soft);
+}

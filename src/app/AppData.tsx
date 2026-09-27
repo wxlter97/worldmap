@@ -1,11 +1,13 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
-import { useUserData, type UserData } from '../lib/data'
+import { useProfile, useUserData, type Profile, type UserData } from '../lib/data'
 import { loadGeo, type Geo } from '../lib/geo'
 import { summarizeCountries, type CountrySummary } from '../lib/model'
 
 interface AppData extends UserData {
-  uid: string | null // dueño de los datos mostrados
+  uid: string // dueño de los datos mostrados
   readOnly: boolean
+  basePath: string // '' para el dueño, '/s/{token}' en un link compartido
+  profile: Profile
   geo: Geo
   summaries: Map<string, CountrySummary>
 }
@@ -27,12 +29,20 @@ export function useGeo() {
   return { geo, error }
 }
 
-export function AppDataProvider({ uid, readOnly, children }: { uid: string; readOnly: boolean; children: ReactNode }) {
+interface ProviderProps {
+  uid: string
+  readOnly: boolean
+  basePath: string
+  children: ReactNode
+}
+
+export function AppDataProvider({ uid, readOnly, basePath, children }: ProviderProps) {
   const { geo, error: geoError } = useGeo()
   const data = useUserData(uid)
+  const profile = useProfile(uid)
   const summaries = useMemo(() => (geo ? summarizeCountries(geo, data.entries) : new Map()), [geo, data.entries])
 
   if (geoError) return <div className="screen-msg notice notice--error">No se pudieron cargar los mapas: {geoError}. Recarga la página.</div>
   if (!geo) return <div className="screen-msg mono">Cargando mapa…</div>
-  return <Ctx.Provider value={{ ...data, uid, readOnly, geo, summaries }}>{children}</Ctx.Provider>
+  return <Ctx.Provider value={{ ...data, uid, readOnly, basePath, profile, geo, summaries }}>{children}</Ctx.Provider>
 }

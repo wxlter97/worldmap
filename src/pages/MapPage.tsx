@@ -1,14 +1,16 @@
 import booleanPointInPolygon from '@turf/boolean-point-in-polygon'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useAppData } from '../app/AppData'
 import { MapView, type MapSelection } from '../components/MapView'
 import { PlacePanel, countryPlace, entryPlace, regionPlace } from '../components/PlacePanel'
 import { SearchBox } from '../components/SearchBox'
+import { TripPanel } from '../components/TripPanel'
 import { StatCard, formatPercent } from '../components/ui'
 import { loadAdmin1, type Geo } from '../lib/geo'
 import { BEEN_STATUSES } from '../lib/model'
 import type { Place } from '../lib/search'
+import { routeCoords, summarizeTrip } from '../lib/trips'
 import './MapPage.css'
 
 const zoomFor = (p: Place) => (p.type === 'country' ? 4 : p.type === 'region' ? 5.5 : 7)
@@ -24,6 +26,18 @@ export function MapPage() {
   // El lugar abierto vive en la URL (?p=city:123) para poder enlazarlo y usar "atrás".
   const param = params.get('p')
   const current = placeFromParam(geo, entries, param)
+  const tripId = params.get('viaje')
+  const tripSummary = useMemo(() => {
+    const trip = trips.find((t) => t.id === tripId)
+    return trip ? summarizeTrip(geo, trip, entries) : null
+  }, [geo, trips, entries, tripId])
+  const route = useMemo(() => (tripSummary ? routeCoords(tripSummary.stops) : null), [tripSummary])
+  const closeTrip = () => {
+    const next = new URLSearchParams(params)
+    next.delete('viaje')
+    next.delete('p')
+    setParams(next)
+  }
   // Clics en el mapa no deben mover la cámara; el buscador, la lista y los enlaces sí.
   const skipFly = useRef(false)
   const open = (p: Place | null, fly = true) => {
@@ -113,7 +127,19 @@ export function MapPage() {
             summaries={summaries}
             onOpen={(p) => open(p)}
             onClose={() => open(null)}
+            closeLabel={tripSummary ? `Volver a ${tripSummary.trip.name}` : undefined}
+            defaultTripId={tripSummary?.trip.id ?? null}
             onStartPick={readOnly ? undefined : (id) => setPickCountry(id)}
+          />
+        ) : tripSummary ? (
+          <TripPanel
+            uid={readOnly ? null : uid}
+            geo={geo}
+            summary={tripSummary}
+            entries={entries}
+            onOpen={(p) => open(p)}
+            onClose={closeTrip}
+            onDeleted={closeTrip}
           />
         ) : (
           <div className="map-page__overview">
@@ -138,6 +164,7 @@ export function MapPage() {
           onSelect={onSelect}
           picking={!!pickCountry}
           onPickLocation={onPickLocation}
+          route={route}
         />
       </section>
     </div>

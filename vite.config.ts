@@ -6,6 +6,20 @@ export default defineConfig({
   worker: { format: 'es' },
   // MapLibre 6 carga su worker como módulo hermano; el pre-bundling de Vite rompe esa relación.
   optimizeDeps: { exclude: ['maplibre-gl'] },
+  build: {
+    rolldownOptions: {
+      output: {
+        // Librerías grandes en chunks propios: cachean mejor y ninguno supera el límite del precache (2 MiB).
+        codeSplitting: {
+          groups: [
+            { name: 'maplibre', test: /node_modules[\\/]maplibre-gl/ },
+            { name: 'firebase', test: /node_modules[\\/](@?firebase)/ },
+            { name: 'vendor', test: /node_modules/ },
+          ],
+        },
+      },
+    },
+  },
   plugins: [
     react(),
     VitePWA({

@@ -46,6 +46,11 @@ npm run build:data   # simplifica y escribe public/data/
 - Una ciudad, región o lugar con estado implica ese estado en su país.
 - **Vivido** y **Visitado** cuentan para estadísticas; **Escala**, **Planeado** y **Quiero ir** no.
 - % del país = área de las regiones visitadas / área total, salvo override manual en la entrada del país.
+- **Viajes** (`users/{uid}/trips/{id}`): nombre + descripción. Cada rango de fechas de una entrada puede apuntar a un viaje
+  (`dates[].tripId`); el itinerario, las fechas y los días del viaje se derivan de ahí. Borrar un viaje conserva las fechas.
+- **Links de solo lectura**: `shares/{token}` → `{ uid, displayName }`. Con `users/{uid}.sharing.enabled = true` las reglas
+  permiten leer el perfil, entradas, viajes y fotos de ese usuario sin sesión. Regenerar el link invalida el anterior;
+  desactivarlo corta toda lectura pública. El perfil público no debe contener datos privados (no se guarda el correo).
 
 ## Configurar Firebase (una vez)
 

@@ -1,7 +1,6 @@
 import { createUserWithEmailAndPassword, sendPasswordResetEmail, signInWithEmailAndPassword } from 'firebase/auth'
 import { useState } from 'react'
 import { authErrorMessage } from '../lib/auth'
-import { ensureProfile } from '../lib/data'
 import { auth, usingEmulators } from '../lib/firebase'
 import { Symbol } from '../components/ui'
 import './LoginPage.css'
@@ -26,8 +25,7 @@ export function LoginPage() {
         await sendPasswordResetEmail(auth, email)
         setInfo('Te enviamos un correo para restablecer la contraseña. Revisa también la carpeta de spam.')
       } else if (mode === 'signup') {
-        const cred = await createUserWithEmailAndPassword(auth, email, password)
-        await ensureProfile(cred.user.uid, cred.user.email)
+        await createUserWithEmailAndPassword(auth, email, password)
       } else {
         await signInWithEmailAndPassword(auth, email, password)
       }
