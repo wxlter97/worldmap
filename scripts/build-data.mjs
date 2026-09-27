@@ -171,7 +171,7 @@ for (const line of fs.readFileSync(path.join(RAW, 'cities15000.txt'), 'utf8').sp
   const country = iso2ToId[c[8]] ?? countryAt(pt)
   if (!country) { droppedCities++; continue }
   // Capitales sin etiqueta en español: "Guatemala City" → "Ciudad de Guatemala".
-  const fallback = c[7] === 'PPLC' && / City$/.test(c[1]) ? `Ciudad de ${c[1].replace(/ City$/, '')}` : c[1]
+  const fallback = c[1] === 'Vatican City' ? 'Ciudad del Vaticano' : c[7] === 'PPLC' && / City$/.test(c[1]) ? `Ciudad de ${c[1].replace(/ City$/, '')}` : c[1]
   const name = shortCityName(namesEs[c[0]], fallback)
   // [id, nombre, país, región, lon, lat, población, esCapital]
   const region = regionAt(country, pt) ?? regionByGeonamesCode[`${c[8]}.${c[10]}`] ?? null
