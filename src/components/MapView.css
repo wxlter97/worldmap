@@ -19,7 +19,7 @@
   max-width: calc(100% - 90px);
   padding: 8px 10px;
   border: var(--border);
-  background: var(--white);
+  background: var(--surface);
   font-family: var(--font-mono);
   font-size: var(--fs-11);
 }
@@ -37,28 +37,29 @@
 .sw {
   width: 14px;
   height: 14px;
-  border: 2px solid var(--ink);
+  border: 2px solid var(--fg);
   display: inline-block;
 }
 
 .sw--lived {
-  background: var(--ink);
+  background: var(--fg);
 }
 
 .sw--visited {
   background: var(--brand-faro);
+  color: var(--on-faro);
 }
 
 .sw--transit {
-  background: repeating-linear-gradient(-45deg, var(--brand-faro) 0 3px, var(--white) 3px 6px);
+  background: repeating-linear-gradient(-45deg, var(--brand-faro) 0 3px, var(--surface) 3px 6px);
 }
 
 .sw--planned {
-  background: repeating-linear-gradient(-45deg, var(--ink) 0 1px, var(--white) 1px 5px);
+  background: repeating-linear-gradient(-45deg, var(--fg) 0 1px, var(--surface) 1px 5px);
 }
 
 .sw--wishlist {
-  background: radial-gradient(var(--ink) 1px, var(--white) 1.5px) 0 0 / 5px 5px;
+  background: radial-gradient(var(--fg) 1px, var(--surface) 1.5px) 0 0 / 5px 5px;
 }
 
 .map-modes {
@@ -70,7 +71,7 @@
 }
 
 .sw--foil {
-  background: repeating-linear-gradient(-45deg, var(--ink-soft) 0 1px, var(--ink) 1px 6px);
+  background: repeating-linear-gradient(-45deg, var(--map-foil-line) 0 1px, var(--map-foil) 1px 6px);
 }
 
 .map-wrap--replay .maplibregl-ctrl-bottom-right {
@@ -83,7 +84,30 @@
   }
 }
 
-/* Controles de MapLibre con el lenguaje del sistema */
+/* Controles de MapLibre con el lenguaje del sistema (y el tema) */
+.maplibregl-ctrl-group,
+.maplibregl-ctrl-attrib,
+.maplibregl-ctrl-attrib-button {
+  background-color: var(--surface) !important;
+  color: var(--fg);
+}
+
+.maplibregl-ctrl-attrib a {
+  color: var(--fg-soft) !important;
+}
+
+:root[data-theme='dark'] .maplibregl-ctrl-icon,
+:root[data-theme='dark'] .maplibregl-ctrl-attrib-button {
+  filter: invert(1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .maplibregl-ctrl-icon,
+  :root:not([data-theme='light']) .maplibregl-ctrl-attrib-button {
+    filter: invert(1);
+  }
+}
+
 .maplibregl-ctrl-group {
   border-radius: 0 !important;
   border: var(--border);

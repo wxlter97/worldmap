@@ -5,6 +5,7 @@ import { useAppData } from '../app/AppData'
 import { ChangePassword, DeleteAccount, EmailVerification } from '../components/AccountSecurity'
 import { disableSharing, enableSharing, saveDisplayName, setShowNotes } from '../lib/data'
 import { auth } from '../lib/firebase'
+import { getThemePref, setThemePref, type ThemePref } from '../lib/theme'
 import './AccountPage.css'
 
 export function AccountPage() {
@@ -13,6 +14,7 @@ export function AccountPage() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
+  const [themePref, setTheme] = useState<ThemePref>(getThemePref)
 
   useEffect(() => setName(profile.displayName), [profile.displayName])
 
@@ -138,6 +140,34 @@ export function AccountPage() {
         <h2>Exportar</h2>
         <p className="account-copy">Póster para imprimir o compartir, CSV para hojas de cálculo y copia de seguridad JSON.</p>
         <Link to="/exportar" className="btn account-link-btn">Ir a Exportar →</Link>
+      </section>
+
+      <section className="account-section">
+        <h2>Tema</h2>
+        <div className="tabs" role="radiogroup" aria-label="Tema de la interfaz">
+          {(
+            [
+              ['auto', 'Automático'],
+              ['light', 'Claro'],
+              ['dark', 'Oscuro'],
+            ] as [ThemePref, string][]
+          ).map(([id, label]) => (
+            <button
+              key={id}
+              type="button"
+              role="radio"
+              aria-checked={themePref === id}
+              aria-selected={themePref === id}
+              onClick={() => {
+                setTheme(id)
+                setThemePref(id)
+              }}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        <p className="account-copy mono account-small">Automático sigue el tema de tu dispositivo. Se guarda en este dispositivo.</p>
       </section>
 
       <EmailVerification />

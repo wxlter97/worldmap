@@ -7,6 +7,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Feature, FeatureCollection, MultiPolygon, Point, Polygon } from 'geojson'
 import { loadAdmin1, type Geo } from '../lib/geo'
 import { readPref, writePref } from '../lib/prefs'
+import { useTheme, type Theme } from '../lib/theme'
 import { BEEN_STATUSES, type CountrySummary, type Entry } from '../lib/model'
 import './MapView.css'
 
@@ -44,15 +45,43 @@ maplibregl.setWorkerUrl(workerUrl)
 
 const C = { faro: '#FFDB00', ink: '#111111', paper: '#F4F3EF', white: '#FFFFFF', ash: '#C9C9C2', smoke: '#6B6B63' }
 
+/** Colores del mapa por tema (solo valores de la paleta del design system). */
+interface MapPalette {
+  ocean: string
+  land: string
+  line: string
+  fg: string // bordes de selección, líneas de viaje, texto
+  lived: string
+  patternBg: string
+  patternInk: string
+  foil: string
+  foilLine: string
+  foilBorder: string // fronteras sobre la lámina
+}
+
+const PALETTES: Record<Theme, MapPalette> = {
+  light: {
+    ocean: C.paper, land: C.white, line: C.ink, fg: C.ink, lived: C.ink,
+    patternBg: C.white, patternInk: C.ink, foil: C.ink, foilLine: '#3D3D38', foilBorder: C.smoke,
+  },
+  dark: {
+    ocean: C.ink, land: '#1C1C1A', line: '#8A8A80', fg: '#EDEDE7', lived: '#EDEDE7',
+    patternBg: '#1C1C1A', patternInk: '#EDEDE7', foil: '#3D3D38', foilLine: '#1C1C1A', foilBorder: '#8A8A80',
+  },
+}
+
+type PatternKind = 'hatch-faro' | 'hatch-ink' | 'dots' | 'foil'
+const PATTERNS: PatternKind[] = ['hatch-faro', 'hatch-ink', 'dots', 'foil']
+
 /** Patrones de relleno dibujados en canvas (sin colores fuera de la paleta). */
-function makePattern(kind: 'hatch-faro' | 'hatch-ink' | 'dots' | 'foil'): ImageData {
+function makePattern(kind: PatternKind, P: MapPalette): ImageData {
   const size = kind === 'foil' ? 16 : 12
   const ctx = new OffscreenCanvas(size, size).getContext('2d')!
-  ctx.fillStyle = kind === 'foil' ? C.ink : C.white
+  ctx.fillStyle = kind === 'foil' ? P.foil : P.patternBg
   ctx.fillRect(0, 0, size, size)
   if (kind === 'foil') {
-    // "Lámina" del mapa de raspar: ink con rayado fino en ink-soft.
-    ctx.strokeStyle = '#3D3D38'
+    // "Lámina" del mapa de raspar con rayado fino.
+    ctx.strokeStyle = P.foilLine
     ctx.lineWidth = 1
     ctx.beginPath()
     for (const o of [-size, -size / 2, 0, size / 2, size]) {
@@ -61,10 +90,10 @@ function makePattern(kind: 'hatch-faro' | 'hatch-ink' | 'dots' | 'foil'): ImageD
     }
     ctx.stroke()
   } else if (kind === 'dots') {
-    ctx.fillStyle = C.ink
+    ctx.fillStyle = P.patternInk
     ctx.fillRect(5, 5, 2, 2)
   } else {
-    ctx.strokeStyle = kind === 'hatch-faro' ? C.faro : C.ink
+    ctx.strokeStyle = kind === 'hatch-faro' ? C.faro : P.patternInk
     ctx.lineWidth = kind === 'hatch-faro' ? 4 : 1.2
     ctx.beginPath()
     for (const o of [-size, 0, size]) {
@@ -82,6 +111,9 @@ export function MapView({ geo, entries, summaries, selectedCountry, focus, onSel
   const [ready, setReady] = useState(false)
   const [globe, setGlobe] = useState(false)
   const [scratch, setScratch] = useState(() => readPref('scratch'))
+  const theme = useTheme()
+  const themeRef = useRef(theme)
+  themeRef.current = theme
   const onSelectRef = useRef(onSelect)
   onSelectRef.current = onSelect
   const selectedRef = useRef(selectedCountry)
@@ -113,10 +145,7 @@ export function MapView({ geo, entries, summaries, selectedCountry, focus, onSel
     if (import.meta.env.DEV) Object.assign(window, { __map: map })
 
     map.on('load', () => {
-      map.addImage('hatch-faro', makePattern('hatch-faro'))
-      map.addImage('hatch-ink', makePattern('hatch-ink'))
-      map.addImage('dots', makePattern('dots'))
-      map.addImage('foil', makePattern('foil'))
+      for (const kind of PATTERNS) map.addImage(kind, makePattern(kind, PALETTES[themeRef.current]))
 
       map.addSource('countries', { type: 'geojson', data: geo.shapes, promoteId: 'id' })
       map.addSource('regions', { type: 'geojson', data: emptyFc(), promoteId: 'id' })
@@ -368,28 +397,34 @@ export function MapView({ geo, entries, summaries, selectedCountry, focus, onSel
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready, fitKey])
 
-  // --- Modo raspar ---
+  // --- Estilo según tema y modo raspar ---
   useEffect(() => {
     if (!ready) return
     const map = mapRef.current!
+    const P = PALETTES[theme]
+    for (const kind of PATTERNS) map.updateImage(kind, makePattern(kind, P))
+    map.setPaintProperty('bg', 'background-color', P.ocean)
     map.setLayoutProperty('country-foil', 'visibility', scratch ? 'visible' : 'none')
     map.setLayoutProperty('country-pattern', 'visibility', scratch ? 'none' : 'visible')
     map.setPaintProperty(
       'country-fill',
       'fill-color',
       scratch
-        ? ['match', ['get', 'status'], ['lived', 'visited'], C.faro, C.paper]
-        : ['match', ['get', 'status'], 'lived', C.ink, 'visited', C.faro, C.white],
+        ? ['match', ['get', 'status'], ['lived', 'visited'], C.faro, P.ocean]
+        : ['match', ['get', 'status'], 'lived', P.lived, 'visited', C.faro, P.land],
     )
     map.setPaintProperty('country-fill', 'fill-opacity', scratch ? 1 : ['case', ['boolean', ['get', 'partial'], false], 0.45, 1])
-    // Sobre la lámina ink, las fronteras y las líneas de viaje en ink desaparecen: se aclaran en este modo.
+    // Sobre la lámina las fronteras y líneas en ink desaparecen: se aclaran en modo raspar.
     const beenExpr: maplibregl.ExpressionSpecification = ['in', ['get', 'status'], ['literal', ['lived', 'visited']]]
-    map.setPaintProperty('country-line', 'line-color', scratch ? ['case', beenExpr, C.ink, C.smoke] : C.ink)
-    map.setPaintProperty('region-line', 'line-color', scratch ? ['case', ['==', ['get', 'visited'], true], C.ink, C.smoke] : C.ink)
-    map.setPaintProperty('route-line', 'line-color', scratch ? C.faro : C.ink)
+    map.setPaintProperty('country-line', 'line-color', scratch ? ['case', beenExpr, C.ink, P.foilBorder] : P.line)
+    map.setPaintProperty('region-line', 'line-color', scratch ? ['case', ['==', ['get', 'visited'], true], C.ink, P.foilBorder] : P.line)
+    map.setPaintProperty('country-selected', 'line-color', P.fg)
+    map.setPaintProperty('route-line', 'line-color', scratch ? C.faro : P.fg)
     map.setLayoutProperty('route-casing', 'visibility', scratch ? 'visible' : 'none')
+    map.setPaintProperty('points', 'circle-color', ['match', ['get', 'status'], 'lived', P.lived, 'visited', C.faro, P.land])
+    map.setPaintProperty('points', 'circle-stroke-color', ['match', ['get', 'status'], 'lived', C.faro, P.fg])
     writePref('scratch', scratch)
-  }, [ready, scratch])
+  }, [ready, scratch, theme])
 
   useEffect(() => {
     if (ready) mapRef.current!.setProjection({ type: globe ? 'globe' : 'mercator' })

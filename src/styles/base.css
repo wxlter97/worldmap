@@ -13,8 +13,8 @@ body,
 }
 
 body {
-  background: var(--paper);
-  color: var(--ink);
+  background: var(--bg);
+  color: var(--fg);
   font-family: var(--font-body);
   font-size: 15px;
   line-height: 1.55;
@@ -45,7 +45,7 @@ a {
 }
 
 .on-faro :focus-visible {
-  outline-color: var(--ink);
+  outline-color: var(--on-faro);
 }
 
 .visually-hidden {
@@ -71,7 +71,7 @@ a {
 }
 
 .muted {
-  color: var(--smoke);
+  color: var(--fg-muted);
 }
 
 /* Botones */
@@ -83,8 +83,8 @@ a {
   min-height: var(--touch);
   padding: 10px 20px;
   border: var(--border);
-  background: var(--white);
-  color: var(--ink);
+  background: var(--surface);
+  color: var(--fg);
   font-family: var(--font-body);
   font-size: 15px;
   font-weight: 700;
@@ -96,27 +96,28 @@ a {
 }
 
 .btn:hover {
-  background: var(--ink);
-  color: var(--white);
+  background: var(--inv-bg);
+  color: var(--inv-fg-plain);
 }
 
 .btn--primary {
   background: var(--brand-faro);
+  color: var(--on-faro);
 }
 
 .btn--primary:hover {
-  background: var(--ink);
-  color: var(--brand-faro);
+  background: var(--inv-bg);
+  color: var(--inv-fg);
 }
 
 .btn--ink {
-  background: var(--ink);
-  color: var(--brand-faro);
+  background: var(--inv-bg);
+  color: var(--inv-fg);
 }
 
 .btn--ink:hover {
   background: var(--brand-faro);
-  color: var(--ink);
+  color: var(--fg);
 }
 
 .btn--danger {
@@ -126,7 +127,7 @@ a {
 
 .btn--danger:hover {
   background: var(--danger);
-  color: var(--white);
+  color: var(--surface);
 }
 
 .btn--small {
@@ -137,9 +138,9 @@ a {
 
 .btn:disabled,
 .btn[aria-disabled='true'] {
-  background: var(--disabled-bg);
-  color: var(--smoke);
-  border-color: var(--ash);
+  background: var(--subtle);
+  color: var(--fg-muted);
+  border-color: var(--line-soft);
   cursor: not-allowed;
 }
 
@@ -151,13 +152,13 @@ a {
   font-family: var(--font-mono);
   font-size: var(--fs-13);
   font-weight: 700;
-  color: var(--ink);
+  color: var(--fg);
   cursor: pointer;
   text-decoration: none;
 }
 
 .link-btn:hover {
-  border-bottom-color: var(--ink);
+  border-bottom-color: var(--fg);
 }
 
 .icon-btn {
@@ -166,7 +167,7 @@ a {
   width: var(--touch);
   height: var(--touch);
   border: var(--border);
-  background: var(--white);
+  background: var(--surface);
   font-family: var(--font-mono);
   font-weight: 700;
   font-size: 16px;
@@ -175,8 +176,8 @@ a {
 }
 
 .icon-btn:hover {
-  background: var(--ink);
-  color: var(--brand-faro);
+  background: var(--inv-bg);
+  color: var(--inv-fg);
 }
 
 /* Campos */
@@ -202,8 +203,8 @@ a {
   min-height: var(--touch);
   padding: 11px 12px;
   border: var(--border);
-  background: var(--white);
-  color: var(--ink);
+  background: var(--surface);
+  color: var(--fg);
   font-family: var(--font-mono);
   font-size: 14px;
 }
@@ -237,22 +238,22 @@ a {
   font-family: var(--font-mono);
   font-size: var(--fs-11);
   font-weight: 700;
-  border: 2px solid var(--ash);
-  background: var(--white);
-  color: var(--smoke);
+  border: 2px solid var(--line-soft);
+  background: var(--surface);
+  color: var(--fg-muted);
   white-space: nowrap;
 }
 
 .badge--faro {
   background: var(--brand-faro);
-  border-color: var(--ink);
-  color: var(--ink);
+  border-color: var(--fg);
+  color: var(--fg);
 }
 
 .badge--ink {
-  background: var(--ink);
-  border-color: var(--ink);
-  color: var(--brand-faro);
+  background: var(--inv-bg);
+  border-color: var(--inv-bg);
+  color: var(--inv-fg);
 }
 
 /* Avisos */
@@ -261,7 +262,7 @@ a {
   border-left: 10px solid var(--brand-faro);
   padding: 12px 14px;
   font-size: 14px;
-  background: var(--white);
+  background: var(--surface);
 }
 
 .notice--error {
@@ -272,7 +273,7 @@ a {
 .tabs {
   display: flex;
   border: var(--border);
-  background: var(--white);
+  background: var(--surface);
 }
 
 .tabs > * {
@@ -284,7 +285,7 @@ a {
   border: 0;
   border-left: var(--border);
   background: none;
-  color: var(--ink);
+  color: var(--fg);
   cursor: pointer;
   text-decoration: none;
   min-height: var(--touch);
@@ -298,19 +299,20 @@ a {
 
 .tabs > [aria-selected='true'],
 .tabs > .active {
-  background: var(--ink);
-  color: var(--brand-faro);
+  background: var(--inv-bg);
+  color: var(--inv-fg);
   font-weight: 700;
 }
 
 /* Card de dato */
 .stat {
   border: var(--border);
-  background: var(--white);
+  background: var(--surface);
 }
 
 .stat__head {
   background: var(--brand-faro);
+  color: var(--on-faro);
   border-bottom: var(--border);
   padding: 10px 14px;
   font-family: var(--font-mono);
@@ -335,7 +337,7 @@ a {
   margin-top: 6px;
   font-family: var(--font-mono);
   font-size: 12px;
-  color: var(--smoke);
+  color: var(--fg-muted);
 }
 
 /* Toggle */
@@ -344,7 +346,7 @@ a {
   height: 28px;
   padding: 2px;
   border: var(--border);
-  background: var(--white);
+  background: var(--surface);
   display: inline-flex;
   cursor: pointer;
 }
@@ -353,11 +355,16 @@ a {
   content: '';
   width: 20px;
   height: 20px;
-  background: var(--ink);
+  background: var(--fg);
+}
+
+.toggle[aria-checked='true']::after {
+  background: var(--on-faro);
 }
 
 .toggle[aria-checked='true'] {
   background: var(--brand-faro);
+  color: var(--on-faro);
   justify-content: flex-end;
 }
 
@@ -365,11 +372,24 @@ a {
 .meter {
   height: 12px;
   border: var(--border);
-  background: var(--white);
+  background: var(--surface);
 }
 
 .meter > span {
   display: block;
   height: 100%;
-  background: var(--ink);
+  background: var(--inv-bg);
+}
+
+/* Wordmark: el punto va en faro sobre fondo oscuro (manual de marca). */
+.wordmark-dot {
+  color: var(--wordmark-dot);
+}
+
+/* Bloques de marca amarillos: símbolo y texto siempre en ink, en cualquier tema. */
+.on-faro {
+  color: var(--on-faro);
+  --symbol-bg: #111111;
+  --symbol-fg: #ffdb00;
+  --wordmark-dot: #111111;
 }

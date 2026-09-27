@@ -18,7 +18,7 @@ export function Shell({ shareName }: { shareName?: string }) {
       <header className="shell__header">
         <NavLink to={home} className="shell__brand" aria-label="Inicio">
           <Symbol size={30} />
-          <span className="shell__wordmark">wxlter.</span>
+          <span className="shell__wordmark">wxlter<span className="wordmark-dot">.</span></span>
           <span className="label shell__app">mapa</span>
         </NavLink>
         <nav className="shell__nav" aria-label="Principal">

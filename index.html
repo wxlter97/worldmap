@@ -8,6 +8,13 @@
     <meta name="theme-color" content="#F4F3EF" />
     <meta name="description" content="Mapa personal de viajes: países, ciudades y lugares visitados." />
     <title>Mapa · wxlter.</title>
+    <script>
+      // Aplica el tema antes de pintar para evitar un destello claro en modo oscuro.
+      try {
+        var t = localStorage.getItem('wm:theme')
+        if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

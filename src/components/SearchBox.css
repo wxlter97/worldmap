@@ -25,7 +25,7 @@
   padding: 0;
   list-style: none;
   border: var(--border);
-  background: var(--white);
+  background: var(--surface);
 }
 
 .search__filters + .search__results {
@@ -37,13 +37,14 @@
   align-items: center;
   gap: 10px;
   padding: 10px 12px;
-  border-bottom: 2px solid var(--disabled-bg);
+  border-bottom: 2px solid var(--subtle);
   cursor: pointer;
   min-height: var(--touch);
 }
 
 .search__item[aria-selected='true'] {
   background: var(--brand-faro);
+  color: var(--on-faro);
 }
 
 .search__flag {
@@ -68,19 +69,19 @@
 .search__meta {
   font-family: var(--font-mono);
   font-size: var(--fs-11);
-  color: var(--smoke);
+  color: var(--fg-muted);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .search__item[aria-selected='true'] .search__meta {
-  color: var(--ink-soft);
+  color: var(--on-faro-soft);
 }
 
 .search__empty {
   padding: 14px 12px;
   font-family: var(--font-mono);
   font-size: 12px;
-  color: var(--smoke);
+  color: var(--fg-muted);
 }

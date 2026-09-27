@@ -8,7 +8,7 @@ export function PrivacyPage() {
       <header className="privacy__header">
         <Link to="/" className="privacy__brand" aria-label="Volver al mapa">
           <Symbol size={30} />
-          <span className="shell__wordmark">wxlter.</span>
+          <span className="shell__wordmark">wxlter<span className="wordmark-dot">.</span></span>
           <span className="label muted">mapa</span>
         </Link>
       </header>

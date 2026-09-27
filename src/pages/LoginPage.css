@@ -6,6 +6,7 @@
 
 .login__brand {
   background: var(--brand-faro);
+  color: var(--on-faro);
   padding: 76px 32px 64px;
   display: flex;
   flex-direction: column;

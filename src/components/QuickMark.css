@@ -5,6 +5,7 @@
   gap: var(--sp-3);
   padding: var(--sp-4);
   background: var(--brand-faro);
+  color: var(--on-faro);
   border-bottom: var(--border);
 }
 
@@ -14,17 +15,17 @@
 }
 
 .quick__head .btn--primary {
-  background: var(--ink);
-  color: var(--brand-faro);
+  background: var(--inv-bg);
+  color: var(--inv-fg);
 }
 
 .quick__head .btn--primary:hover {
-  background: var(--white);
-  color: var(--ink);
+  background: var(--surface);
+  color: var(--fg);
 }
 
 .quick__head :focus-visible {
-  outline-color: var(--ink);
+  outline-color: var(--on-faro);
 }
 
 .quick__body {
@@ -57,11 +58,11 @@
   margin: 0;
   padding: 0;
   border: var(--border);
-  background: var(--white);
+  background: var(--surface);
 }
 
 .quick__list li + li {
-  border-top: 2px solid var(--disabled-bg);
+  border-top: 2px solid var(--subtle);
 }
 
 .quick__row {
@@ -74,21 +75,23 @@
 }
 
 .quick__row:hover {
-  background: var(--paper);
+  background: var(--bg);
 }
 
 .quick__row--on {
   background: var(--brand-faro);
+  color: var(--on-faro);
 }
 
 .quick__row--on:hover {
   background: var(--brand-faro);
+  color: var(--on-faro);
 }
 
 .quick__row input {
   width: 18px;
   height: 18px;
-  accent-color: var(--ink);
+  accent-color: var(--fg);
   flex-shrink: 0;
 }
 

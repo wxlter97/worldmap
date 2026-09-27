@@ -3,7 +3,7 @@
   flex-shrink: 0;
   display: grid;
   place-items: center;
-  background: var(--ink);
+  background: var(--ink-fixed);
   overflow: hidden;
   isolation: isolate;
 }
@@ -14,6 +14,7 @@
   right: 0;
   bottom: 0;
   background: var(--brand-faro);
+  color: var(--on-faro);
 }
 
 .band-icon__glyph {
@@ -55,12 +56,12 @@
   gap: var(--sp-3);
   align-items: center;
   padding: 10px;
-  border: 2px solid var(--ash);
-  background: var(--white);
+  border: 2px solid var(--line-soft);
+  background: var(--surface);
 }
 
 .ach--done {
-  border-color: var(--ink);
+  border-color: var(--fg);
 }
 
 .ach__text {
@@ -76,12 +77,12 @@
 .ach__desc {
   font-size: 13px;
   line-height: 1.35;
-  color: var(--ink-soft);
+  color: var(--fg-soft);
 }
 
 .ach:not(.ach--done) .ach__text strong,
 .ach:not(.ach--done) .ach__desc {
-  color: var(--smoke);
+  color: var(--fg-muted);
 }
 
 .ach__meta {
@@ -109,7 +110,7 @@
   gap: var(--sp-3);
   padding: 10px;
   border: var(--border);
-  background: var(--ink);
+  background: var(--ink-fixed);
   color: var(--on-ink);
 }
 

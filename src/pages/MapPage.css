@@ -8,7 +8,7 @@
 .map-page__side {
   border-right: var(--border);
   overflow-y: auto;
-  background: var(--paper);
+  background: var(--bg);
   min-height: 0;
 }
 
@@ -17,7 +17,7 @@
   top: 0;
   z-index: 5;
   padding: var(--sp-4);
-  background: var(--paper);
+  background: var(--bg);
   border-bottom: var(--border);
 }
 
@@ -37,7 +37,7 @@
   gap: var(--sp-3);
   padding: var(--sp-4);
   border: var(--border);
-  background: var(--white);
+  background: var(--surface);
 }
 
 .map-page__pending-actions {

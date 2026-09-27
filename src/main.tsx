@@ -8,6 +8,7 @@ import { Shell } from './app/Shell'
 import { AuthProvider, useAuth } from './lib/auth'
 import { ensureProfile, resolveShare, type ShareInfo } from './lib/data'
 import { firebaseConfigured } from './lib/firebase'
+import { applyTheme } from './lib/theme'
 import { AccountPage } from './pages/AccountPage'
 import { ExportPage } from './pages/ExportPage'
 import { ListPage } from './pages/ListPage'
@@ -86,6 +87,8 @@ function App() {
     </Routes>
   )
 }
+
+applyTheme()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

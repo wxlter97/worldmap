@@ -42,13 +42,79 @@
   --sp-16: 64px;
   --sp-24: 96px;
 
+  /* Tokens semánticos (cambian con el tema). Las primitivas de arriba no cambian. */
+  --bg: var(--paper);
+  --surface: var(--white);
+  --fg: var(--ink);
+  --fg-soft: var(--ink-soft);
+  --fg-muted: var(--smoke);
+  --line: var(--ink);
+  --line-soft: var(--ash);
+  --subtle: var(--disabled-bg);
+  --inv-bg: var(--ink); /* bloque invertido: tabs activas, badges, botón ink */
+  --inv-fg: var(--brand-faro);
+  --inv-fg-plain: var(--white);
+  --on-faro: #111111; /* texto sobre amarillo: siempre ink */
+  --on-faro-soft: #3d3d38;
+  --ink-fixed: #111111; /* componentes siempre oscuros (repetición, visor, avisos) */
+  --ink-soft-fixed: #3d3d38;
+  --map-foil: #111111;
+  --map-foil-line: #3d3d38;
+  --symbol-bg: #111111;
+  --symbol-fg: #ffdb00;
+  --wordmark-dot: var(--fg);
+  color-scheme: light;
+
   /* Forma: radio 0 siempre, sin sombras */
-  --border: 2px solid var(--ink);
-  --border-section: 3px solid var(--ink);
+  --border: 2px solid var(--line);
+  --border-section: 3px solid var(--fg);
   --focus: 3px solid var(--brand-faro);
   --touch: 44px;
   --hover-ms: 120ms;
   --header-h: 60px;
+}
+
+/* Modo oscuro: fondos ink, texto on-ink, acento faro (el amarillo sí es válido como texto sobre negro). */
+:root[data-theme='dark'] {
+  --bg: #111111;
+  --surface: #1c1c1a;
+  --fg: #edede7;
+  --fg-soft: #c9c9c2;
+  --fg-muted: #8a8a80;
+  --line: #8a8a80;
+  --line-soft: #3d3d38;
+  --subtle: #3d3d38;
+  --inv-bg: var(--brand-faro);
+  --inv-fg: #111111;
+  --inv-fg-plain: #111111;
+  --map-foil: #3d3d38;
+  --map-foil-line: #1c1c1a;
+  --symbol-bg: #ffdb00;
+  --symbol-fg: #111111;
+  --wordmark-dot: #ffdb00;
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --bg: #111111;
+    --surface: #1c1c1a;
+    --fg: #edede7;
+    --fg-soft: #c9c9c2;
+    --fg-muted: #8a8a80;
+    --line: #8a8a80;
+    --line-soft: #3d3d38;
+    --subtle: #3d3d38;
+    --inv-bg: var(--brand-faro);
+    --inv-fg: #111111;
+    --inv-fg-plain: #111111;
+    --map-foil: #3d3d38;
+    --map-foil-line: #1c1c1a;
+    --symbol-bg: #ffdb00;
+    --symbol-fg: #111111;
+    --wordmark-dot: #ffdb00;
+    color-scheme: dark;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

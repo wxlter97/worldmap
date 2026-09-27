@@ -18,7 +18,7 @@
   gap: var(--sp-3);
   padding: 8px 12px;
   border: var(--border);
-  background: var(--ink);
+  background: var(--ink-fixed);
   color: var(--on-ink);
   font-family: var(--font-mono);
   font-size: 12px;
@@ -35,7 +35,7 @@
 .statusbar__item button {
   border: 0;
   background: var(--brand-faro);
-  color: var(--ink);
+  color: var(--ink-fixed);
   font-family: var(--font-mono);
   font-weight: 700;
   font-size: 12px;

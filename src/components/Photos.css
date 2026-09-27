@@ -5,7 +5,7 @@
   width: 100%;
   padding: 0;
   border: var(--border);
-  background: var(--white);
+  background: var(--surface);
   overflow: hidden;
   cursor: pointer;
 }
@@ -47,7 +47,7 @@
   z-index: 100;
   display: flex;
   flex-direction: column;
-  background: var(--ink);
+  background: var(--ink-fixed);
   color: var(--on-ink);
 }
 
@@ -56,7 +56,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 8px 8px 8px 16px;
-  border-bottom: 2px solid var(--ink-soft);
+  border-bottom: 2px solid var(--ink-soft-fixed);
 }
 
 .lightbox__bar .mono {
@@ -98,7 +98,7 @@
   top: 50%;
   transform: translateY(-50%);
   background: var(--ink-raised) !important;
-  border: 2px solid var(--ink-soft) !important;
+  border: 2px solid var(--ink-soft-fixed) !important;
 }
 
 .lightbox__nav--prev {
@@ -120,7 +120,7 @@
   display: flex;
   flex-direction: column;
   border: var(--border);
-  background: var(--white);
+  background: var(--surface);
 }
 
 .photo-cell .thumb {
@@ -149,12 +149,12 @@
 }
 
 .photo-cell__actions button:hover {
-  background: var(--ink);
-  color: var(--brand-faro);
+  background: var(--inv-bg);
+  color: var(--inv-fg);
 }
 
 .photo-cell__cover {
   background: var(--brand-faro) !important;
-  color: var(--ink) !important;
+  color: var(--on-faro) !important;
   cursor: default !important;
 }

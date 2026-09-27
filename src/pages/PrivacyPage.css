@@ -1,6 +1,6 @@
 .privacy {
   min-height: 100%;
-  background: var(--paper);
+  background: var(--bg);
 }
 
 .privacy__header {
@@ -46,7 +46,7 @@
 .privacy__main li {
   font-size: 17px;
   line-height: 1.55;
-  color: var(--ink-soft);
+  color: var(--fg-soft);
 }
 
 .privacy__main ul {

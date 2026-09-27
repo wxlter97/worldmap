@@ -6,11 +6,11 @@ import { useMemo } from 'react'
 export function Symbol({ size = 34, inverted = false }: { size?: number; inverted?: boolean }) {
   return (
     <svg width={size} height={size} viewBox="0 0 100 100" aria-hidden="true">
-      <rect width="100" height="100" fill={inverted ? '#FFDB00' : '#111111'} />
+      <rect width="100" height="100" style={{ fill: inverted ? '#FFDB00' : 'var(--symbol-bg)' }} />
       <polyline
         points="14,24 32,76 50,44 68,76 86,24"
         fill="none"
-        stroke={inverted ? '#111111' : '#FFDB00'}
+        style={{ stroke: inverted ? '#111111' : 'var(--symbol-fg)' }}
         strokeWidth={size < 32 ? 17 : 15}
         strokeLinejoin="miter"
       />

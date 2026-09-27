@@ -40,7 +40,7 @@
 }
 
 .tl-month + .tl-month {
-  border-top: 2px solid var(--disabled-bg);
+  border-top: 2px solid var(--subtle);
 }
 
 .tl-month h3 {
@@ -62,13 +62,14 @@
   gap: var(--sp-3);
   padding: 10px 12px;
   border: var(--border);
-  background: var(--white);
+  background: var(--surface);
   text-decoration: none;
   min-height: var(--touch);
 }
 
 .tl-item:hover {
   background: var(--brand-faro);
+  color: var(--on-faro);
 }
 
 .tl-item__date {
@@ -96,7 +97,7 @@
 }
 
 .tl-item:hover .muted {
-  color: var(--ink-soft);
+  color: var(--on-faro-soft);
 }
 
 .tl-item__photo {

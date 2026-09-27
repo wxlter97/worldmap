@@ -45,15 +45,15 @@
   display: flex;
   flex-direction: column;
   border: var(--border);
-  background: var(--white);
+  background: var(--surface);
   text-decoration: none;
 }
 
 .trip-card__head {
   padding: 10px 14px;
   border-bottom: var(--border);
-  background: var(--ink);
-  color: var(--brand-faro);
+  background: var(--inv-bg);
+  color: var(--inv-fg);
 }
 
 .trip-card__body {
@@ -89,6 +89,7 @@
 
 .trip-card:hover .trip-card__foot {
   background: var(--brand-faro);
+  color: var(--on-faro);
 }
 
 @media (max-width: 600px) {

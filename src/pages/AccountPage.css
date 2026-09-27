@@ -49,7 +49,7 @@
 
 .account-copy {
   max-width: 62ch;
-  color: var(--ink-soft);
+  color: var(--fg-soft);
 }
 
 .account-link {
@@ -87,7 +87,7 @@
   border: 2px solid var(--danger);
   border-left-width: 10px;
   padding: var(--sp-4);
-  background: var(--white);
+  background: var(--surface);
 }
 
 .account-danger h2 {

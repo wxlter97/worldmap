@@ -10,7 +10,7 @@
 .sugg__item {
   display: flex;
   border: var(--border);
-  background: var(--white);
+  background: var(--surface);
   min-width: 0;
 }
 
@@ -27,6 +27,7 @@
 
 .sugg__link:hover {
   background: var(--brand-faro);
+  color: var(--on-faro);
 }
 
 .sugg__text {
@@ -45,11 +46,11 @@
 .sugg__text .mono {
   font-size: 11px;
   line-height: 1.35;
-  color: var(--smoke);
+  color: var(--fg-muted);
 }
 
 .sugg__link:hover .mono {
-  color: var(--ink-soft);
+  color: var(--on-faro-soft);
 }
 
 .sugg__add {
@@ -57,7 +58,7 @@
   flex-shrink: 0;
   border: 0;
   border-left: var(--border);
-  background: var(--white);
+  background: var(--surface);
   font-family: var(--font-mono);
   font-weight: 700;
   font-size: 18px;
@@ -65,8 +66,8 @@
 }
 
 .sugg__add:hover {
-  background: var(--ink);
-  color: var(--brand-faro);
+  background: var(--inv-bg);
+  color: var(--inv-fg);
 }
 
 .sugg-empty {

@@ -15,7 +15,7 @@
   justify-content: space-between;
   gap: var(--sp-4);
   padding: 0 var(--sp-8);
-  background: var(--paper);
+  background: var(--bg);
   border-bottom: var(--border);
 }
 
@@ -35,7 +35,7 @@
 
 .shell__app {
   line-height: 1;
-  color: var(--smoke);
+  color: var(--fg-muted);
 }
 
 .shell__nav {
@@ -63,20 +63,21 @@
 
 .shell__nav a.shell__account {
   background: var(--brand-faro);
+  color: var(--on-faro);
   border: var(--border);
   padding: 4px 10px;
 }
 
 .shell__nav a.shell__account:hover,
 .shell__nav a.shell__account.active {
-  background: var(--ink);
-  color: var(--brand-faro);
-  border-bottom-color: var(--ink);
+  background: var(--inv-bg);
+  color: var(--inv-fg);
+  border-bottom-color: var(--inv-bg);
 }
 
 .shell__readonly {
-  background: var(--ink);
-  color: var(--brand-faro);
+  background: var(--inv-bg);
+  color: var(--inv-fg);
   padding: 6px var(--sp-8);
 }
 

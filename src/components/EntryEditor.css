@@ -48,7 +48,7 @@
   gap: var(--sp-2);
   padding-left: 12px;
   border: var(--border);
-  background: var(--white);
+  background: var(--surface);
   font-family: var(--font-mono);
   font-size: 13px;
 }
@@ -64,8 +64,8 @@
   margin-left: auto;
   max-width: 45%;
   min-height: 32px;
-  border: 2px solid var(--ash);
-  background: var(--white);
+  border: 2px solid var(--line-soft);
+  background: var(--surface);
   font-family: var(--font-mono);
   font-size: 11px;
 }
@@ -95,7 +95,7 @@
 
 .editor__preview {
   border: var(--border);
-  background: var(--white);
+  background: var(--surface);
   padding: 12px;
   min-height: 140px;
 }
@@ -115,15 +115,15 @@
   width: var(--touch);
   height: var(--touch);
   border: var(--border);
-  background: var(--white);
+  background: var(--surface);
   font-family: var(--font-mono);
   font-weight: 700;
   cursor: pointer;
 }
 
 .star--on {
-  background: var(--ink);
-  color: var(--brand-faro);
+  background: var(--inv-bg);
+  color: var(--inv-fg);
 }
 
 .editor__actions {
@@ -140,7 +140,7 @@
 
 .photo {
   border: var(--border);
-  background: var(--white);
+  background: var(--surface);
   aspect-ratio: 4 / 3;
   display: grid;
   place-items: center;
@@ -178,6 +178,6 @@
 
 .markdown code {
   font-family: var(--font-mono);
-  background: var(--disabled-bg);
+  background: var(--subtle);
   padding: 0 4px;
 }
