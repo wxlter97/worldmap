@@ -5,13 +5,14 @@ import { useAppData } from '../app/AppData'
 import { MapView, type MapLines, type MapSelection } from '../components/MapView'
 import { ReplayBar, type ReplayState } from '../components/ReplayBar'
 import { PlacePanel, countryPlace, entryPlace, regionPlace } from '../components/PlacePanel'
+import { QuickMarkPanel, toggleCountry } from '../components/QuickMark'
 import { SearchBox } from '../components/SearchBox'
 import { TripPanel } from '../components/TripPanel'
 import { StatCard, formatPercent } from '../components/ui'
 import { loadAdmin1, type Geo } from '../lib/geo'
 import { readPref, writePref } from '../lib/prefs'
 import { buildJourney, journeyArcs } from '../lib/journey'
-import { BEEN_STATUSES, summarizeCountries, type Entry } from '../lib/model'
+import { BEEN_STATUSES, summarizeCountries, type Entry, type Status } from '../lib/model'
 import type { Place } from '../lib/search'
 import { useGazetteer, type Gazetteer } from '../lib/suggestions'
 import { summarizeTrip } from '../lib/trips'
@@ -116,7 +117,19 @@ export function MapPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [param, current == null])
 
+  // --- Marcado rápido ---
+  const [quick, setQuick] = useState<Status | null>(null)
+  const [quickMsg, setQuickMsg] = useState<string | null>(null)
+
   const onSelect = (s: MapSelection) => {
+    if (quick) {
+      const id = s.type === 'country' ? s.id : s.type === 'region' ? s.countryId : null
+      if (id && uid && !readOnly) {
+        const r = toggleCountry(uid, geo, entries, id, quick)
+        setQuickMsg(r === 'kept' ? `${geo.countries[id]?.name} tiene fechas o notas: ábrelo desde el mapa normal para quitarlo.` : null)
+      }
+      return
+    }
     if (s.type === 'country') open(countryPlace(geo, s.id), false)
     else if (s.type === 'region') open(regionPlace(geo, s.id), false)
     else {
@@ -148,9 +161,11 @@ export function MapPage() {
   return (
     <div className={replay ? 'map-page map-page--replay' : 'map-page'}>
       <aside className="map-page__side">
-        <div className="map-page__search">
-          <SearchBox geo={geo} entries={entries} onPick={(p) => open(p)} />
-        </div>
+        {!quick && (
+          <div className="map-page__search">
+            <SearchBox geo={geo} entries={entries} onPick={(p) => open(p)} />
+          </div>
+        )}
 
         {pickCountry && (
           <div className="notice map-page__notice" role="status">
@@ -172,7 +187,21 @@ export function MapPage() {
           </form>
         )}
 
-        {current ? (
+        {quick && uid ? (
+          <QuickMarkPanel
+            uid={uid}
+            geo={geo}
+            entries={entries}
+            summaries={summaries}
+            status={quick}
+            onStatus={setQuick}
+            message={quickMsg}
+            onDone={() => {
+              setQuick(null)
+              setQuickMsg(null)
+            }}
+          />
+        ) : current ? (
           <PlacePanel
             uid={readOnly ? null : uid}
             geo={geo}
@@ -204,9 +233,23 @@ export function MapPage() {
               <StatCard label="Lugares" value={entries.filter((e) => e.type !== 'country' && e.type !== 'region').length} meta="ciudades y lugares" />
             </div>
             <div className="map-page__journey">
-              <button type="button" className="btn btn--ink" disabled={journey.length < 2} onClick={startReplay}>
-                ▶ Repetir mis viajes
-              </button>
+              <div className="map-page__actions">
+                {!readOnly && (
+                  <button
+                    type="button"
+                    className="btn btn--primary"
+                    onClick={() => {
+                      closeTrip()
+                      setQuick('visited')
+                    }}
+                  >
+                    Marcado rápido
+                  </button>
+                )}
+                <button type="button" className="btn btn--ink" disabled={journey.length < 2} onClick={startReplay}>
+                  ▶ Repetir mis viajes
+                </button>
+              </div>
               <label className="map-page__toggle">
                 <button
                   type="button"
@@ -237,7 +280,7 @@ export function MapPage() {
           geo={geo}
           entries={replayEntries ?? entries}
           summaries={replaySummaries ?? summaries}
-          selectedCountry={replay ? null : current?.countryId ?? null}
+          selectedCountry={replay || quick ? null : current?.countryId ?? null}
           focus={focus}
           onSelect={onSelect}
           picking={!!pickCountry}

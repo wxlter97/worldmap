@@ -50,7 +50,8 @@ export interface Entry {
   tags: string[]
   rating: number | null // 1–5
   people: string
-  photoPath: string | null
+  photoPath: string | null // primera foto (compatibilidad con entradas antiguas)
+  photos?: string[] // todas las fotos, en orden; photos[0] === photoPath
   percentOverride: number | null // solo países: % manual
   priority: number | null // solo "quiero ir": 1 (alta) – 3 (baja)
   createdAt: number

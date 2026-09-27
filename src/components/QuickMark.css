@@ -1,0 +1,102 @@
+.quick__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  background: var(--brand-faro);
+  border-bottom: var(--border);
+}
+
+.quick__head h2 {
+  font-size: 25px;
+  margin-top: 4px;
+}
+
+.quick__head .btn--primary {
+  background: var(--ink);
+  color: var(--brand-faro);
+}
+
+.quick__head .btn--primary:hover {
+  background: var(--white);
+  color: var(--ink);
+}
+
+.quick__head :focus-visible {
+  outline-color: var(--ink);
+}
+
+.quick__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+}
+
+.quick__body .tabs > * {
+  font-size: 11px;
+}
+
+.quick__hint {
+  font-size: 12px;
+}
+
+.quick__continents {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.quick__continents .badge {
+  cursor: pointer;
+}
+
+.quick__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: var(--border);
+  background: var(--white);
+}
+
+.quick__list li + li {
+  border-top: 2px solid var(--disabled-bg);
+}
+
+.quick__row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: var(--touch);
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.quick__row:hover {
+  background: var(--paper);
+}
+
+.quick__row--on {
+  background: var(--brand-faro);
+}
+
+.quick__row--on:hover {
+  background: var(--brand-faro);
+}
+
+.quick__row input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--ink);
+  flex-shrink: 0;
+}
+
+.quick__name {
+  flex: 1;
+  min-width: 0;
+}
+
+.quick__name .mono {
+  font-size: 11px;
+}

@@ -68,6 +68,12 @@
   border-bottom: var(--border);
 }
 
+.map-page__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
 .map-page__toggle {
   display: flex;
   align-items: center;
