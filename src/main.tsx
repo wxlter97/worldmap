@@ -16,6 +16,7 @@ import { ExportPage } from './pages/ExportPage'
 import { ListPage } from './pages/ListPage'
 import { LoginPage } from './pages/LoginPage'
 import { MapPage } from './pages/MapPage'
+import { PlannerPage } from './pages/PlannerPage'
 import { PrivacyPage } from './pages/PrivacyPage'
 import { StatsPage } from './pages/StatsPage'
 import { TripsPage } from './pages/TripsPage'
@@ -29,6 +30,7 @@ function DataRoutes({ shareName }: { shareName?: string }) {
         <Route index element={<MapPage />} />
         <Route path="lista" element={<ListPage />} />
         <Route path="viajes" element={<TripsPage />} />
+        {shareName === undefined && <Route path="viajes/:tripId" element={<PlannerPage />} />}
         <Route path="estadisticas" element={<StatsPage />} />
         {shareName === undefined && <Route path="cuenta" element={<AccountPage />} />}
         {shareName === undefined && <Route path="exportar" element={<ExportPage />} />}

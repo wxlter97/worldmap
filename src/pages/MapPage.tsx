@@ -16,6 +16,7 @@ import { BEEN_STATUSES, summarizeCountries, type Entry, type Status } from '../l
 import type { Place } from '../lib/search'
 import { useGazetteer, type Gazetteer } from '../lib/suggestions'
 import { summarizeTrip } from '../lib/trips'
+import { stopCoords } from '../lib/plan'
 import { t } from '../lib/i18n'
 import './MapPage.css'
 
@@ -36,7 +37,7 @@ async function focusFor(geo: Geo, p: Place): Promise<MapFocus | null> {
 }
 
 export function MapPage() {
-  const { geo, entries, trips, summaries, uid, readOnly, basePath, sharedTripId } = useAppData()
+  const { geo, entries, trips, plans, summaries, uid, readOnly, basePath, sharedTripId } = useAppData()
   const [params, setParams] = useSearchParams()
   const [focus, setFocus] = useState<MapFocus | null>(null)
   const [pickCountry, setPickCountry] = useState<string | null>(null)
@@ -51,8 +52,8 @@ export function MapPage() {
   const tripId = params.get('viaje') ?? sharedTripId
   const tripSummary = useMemo(() => {
     const trip = trips.find((t) => t.id === tripId)
-    return trip ? summarizeTrip(geo, trip, entries) : null
-  }, [geo, trips, entries, tripId])
+    return trip ? summarizeTrip(geo, trip, entries, tripId ? plans.get(tripId) : null) : null
+  }, [geo, trips, entries, tripId, plans])
 
   // --- Líneas de viaje y repetición ---
   const [showLines, setShowLines] = useState(() => readPref('lines'))
@@ -85,12 +86,17 @@ export function MapPage() {
       }
     }
     if (tripJourney) {
-      const coords = tripJourney.map((s) => [s.lon, s.lat] as [number, number])
+      // Viaje por hacer (o sin fechas aún): la ruta sale de las paradas del plan.
+      const plan = tripId ? plans.get(tripId) : undefined
+      const coords =
+        plan?.stops.length && (!plan.closed || tripJourney.length === 0)
+          ? plan.stops.map((s) => stopCoords(geo, s.place)).filter((c): c is [number, number] => !!c)
+          : tripJourney.map((s) => [s.lon, s.lat] as [number, number])
       return { arcs: journeyArcs(coords), stops: coords, fitKey: `trip:${tripId}`, fitCoords: coords }
     }
     if (showLines) return { arcs: allArcs, stops: journeyCoords, fitKey: null }
     return null
-  }, [replay, allArcs, allArcsByLeg, journeyCoords, tripJourney, tripId, showLines])
+  }, [replay, allArcs, allArcsByLeg, journeyCoords, tripJourney, tripId, showLines, plans, geo])
 
   // Durante la repetición el mapa solo pinta lo visitado hasta la fecha actual.
   const replayDate = replay ? journey[Math.floor(replay.t)]?.date ?? null : null

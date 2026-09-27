@@ -404,8 +404,10 @@ export function MapView({ geo, entries, summaries, selectedCountry, selectedRegi
   }, [ready, head])
 
   const fitKey = lines?.fitKey ?? null
+  // Al abrir un link directo las paradas llegan después que el mapa: se encuadra cuando aparecen.
+  const hasFitCoords = (lines?.fitCoords?.length ?? 0) > 0
   useEffect(() => {
-    if (!ready || !fitKey) return
+    if (!ready || !fitKey || !hasFitCoords) return
     const map = mapRef.current!
     const coords = lines?.fitCoords ?? []
     if (coords.length === 1) map.flyTo({ center: coords[0], zoom: 5, duration: 900 })
@@ -413,9 +415,9 @@ export function MapView({ geo, entries, summaries, selectedCountry, selectedRegi
       const bounds = coords.reduce((b, c) => b.extend(c), new maplibregl.LngLatBounds(coords[0], coords[0]))
       map.fitBounds(bounds, { padding: 60, maxZoom: 5.5, duration: 900 })
     }
-    // Solo cuando cambia la clave de encuadre.
+    // Solo cuando cambia la clave de encuadre (o llegan sus paradas).
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ready, fitKey])
+  }, [ready, fitKey, hasFitCoords])
 
   // --- Estilo según tema y modo raspar ---
   useEffect(() => {

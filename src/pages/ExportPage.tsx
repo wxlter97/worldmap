@@ -9,7 +9,7 @@ import './ExportPage.css'
 
 
 export function ExportPage() {
-  const { geo, entries, trips, summaries, profile, uid } = useAppData()
+  const { geo, entries, trips, plans, summaries, profile, uid } = useAppData()
   const stats = useMemo(() => computeStats(geo, entries, summaries), [geo, entries, summaries])
 
   // --- Póster ---
@@ -141,7 +141,7 @@ export function ExportPage() {
           <button type="button" className="btn" onClick={() => download(`mapa-wxlter-${today()}.csv`, entriesToCsv(geo, entries, trips))}>
             {t('Descargar CSV')}
           </button>
-          <button type="button" className="btn" onClick={() => download(`mapa-wxlter-copia-${today()}.json`, backupToJson(entries, trips))}>
+          <button type="button" className="btn" onClick={() => download(`mapa-wxlter-copia-${today()}.json`, backupToJson(entries, trips, [...plans.values()]))}>
             {t('Descargar copia JSON')}
           </button>
         </div>

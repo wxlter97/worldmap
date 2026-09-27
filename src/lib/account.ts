@@ -36,7 +36,7 @@ export async function deleteAccount(user: User, password: string, onProgress?: (
   await Promise.all((photos?.items ?? []).map((item) => deleteObject(item).catch(() => undefined)))
 
   onProgress?.(t('Borrando lugares y viajes…'))
-  for (const name of ['entries', 'trips', 'notes']) {
+  for (const name of ['entries', 'trips', 'notes', 'plans']) {
     const snap = await getDocs(collection(db, 'users', uid, name))
     for (let i = 0; i < snap.docs.length; i += 400) {
       const batch = writeBatch(db)

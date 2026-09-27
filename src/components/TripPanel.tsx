@@ -1,9 +1,11 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useAppData } from '../app/AppData'
 import { deleteTrip, disableTripShare, enableTripShare, saveTrip } from '../lib/data'
 import type { Geo } from '../lib/geo'
 import { PLACE_TYPE_LABEL, STATUS_LABEL, flagEmoji, formatRange, type Entry } from '../lib/model'
 import type { Place } from '../lib/search'
+import { schedule } from '../lib/plan'
 import { formatTripRange, type TripSummary } from '../lib/trips'
 import { entryPlace } from './PlacePanel'
 import { Markdown } from './ui'
@@ -22,6 +24,8 @@ interface Props {
 
 export function TripPanel({ uid, geo, summary, entries, onOpen, onClose, onDeleted }: Props) {
   const { trip, stops } = summary
+  const { plans } = useAppData()
+  const plan = uid ? plans.get(trip.id) : undefined
   const [editing, setEditing] = useState(false)
   const [name, setName] = useState(trip.name)
   const [description, setDescription] = useState(trip.description)
@@ -49,8 +53,9 @@ export function TripPanel({ uid, geo, summary, entries, onOpen, onClose, onDelet
         <div className="panel__row mono panel__small">
           <span className="badge badge--ink">{tn(summary.days, '{n} día', '{n} días')}</span>
           <span className="badge">{tn(summary.countryIds.length, '{n} país', '{n} países')}</span>
-          <span className="badge">{tn(stops.length, '{n} parada', '{n} paradas')}</span>
+          <span className="badge">{tn(summary.plannedStops ?? stops.length, '{n} parada', '{n} paradas')}</span>
           {uid && !editing && <button type="button" className="btn btn--small panel__edit" onClick={startEdit}>{t('Editar')}</button>}
+          {uid && !editing && <Link className="btn btn--small btn--primary" to={`/viajes/${trip.id}`}>{t('Planificador')}</Link>}
         </div>
 
         {editing ? (
@@ -79,7 +84,7 @@ export function TripPanel({ uid, geo, summary, entries, onOpen, onClose, onDelet
                 className="btn btn--danger"
                 onClick={() => {
                   if (!confirm(t('¿Eliminar el viaje «{name}»? Las fechas de sus lugares se conservan, sin viaje.', { name: trip.name }))) return
-                  void deleteTrip(uid!, trip.id, entries)
+                  void deleteTrip(uid!, trip.id, entries, plans)
                   onDeleted()
                 }}
               >
@@ -96,7 +101,23 @@ export function TripPanel({ uid, geo, summary, entries, onOpen, onClose, onDelet
 
       <section className="panel__section">
         <h3 className="panel__h3">{t('Itinerario')}</h3>
-        {stops.length === 0 ? (
+        {stops.length === 0 && plan?.stops.length ? (
+          <ol className="itinerary">
+            {schedule(plan).stops.map((s, i) => (
+              <li key={s.stop.id}>
+                <button type="button" onClick={() => onOpen({ ...s.stop.place })}>
+                  <span className="itinerary__n mono">{String(i + 1).padStart(2, '0')}</span>
+                  <span className="itinerary__main">
+                    <strong>{flagEmoji(geo.countries[s.stop.place.countryId]?.iso2 ?? null)} {s.stop.place.name}</strong>
+                    <span className="mono muted">
+                      {s.arriveDate ? formatTripRange(s.arriveDate, s.departDate) : tn(s.stop.nights, '{n} noche', '{n} noches')} · {STATUS_LABEL.planned}
+                    </span>
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ol>
+        ) : stops.length === 0 ? (
           <p className="mono muted panel__small">
             {t('Sin paradas. Abre un lugar, añade una fecha y elige «{name}» en el campo Viaje.', { name: trip.name })}
           </p>

@@ -116,3 +116,24 @@ describe('link de un viaje', () => {
     await assertFails(getDoc(doc(anon(), 'users', OWNER, 'trips', TRIP)))
   })
 })
+
+describe('planes de viaje', () => {
+  const plan = (over: object = {}) => ({ tripId: TRIP, stops: [], bookings: [], checklist: [], ...over })
+
+  it('solo el dueño, aunque el mapa y el viaje estén compartidos', async () => {
+    await seed({ sharing: { enabled: true, showNotes: true }, sharedTrips: [TRIP] })
+    await assertSucceeds(setDoc(doc(owner(), 'users', OWNER, 'plans', TRIP), plan()))
+    await assertSucceeds(getDoc(doc(owner(), 'users', OWNER, 'plans', TRIP)))
+    await assertFails(getDoc(doc(anon(), 'users', OWNER, 'plans', TRIP)))
+    await assertFails(getDoc(doc(stranger(), 'users', OWNER, 'plans', TRIP)))
+    await assertFails(setDoc(doc(stranger(), 'users', OWNER, 'plans', TRIP), plan()))
+    await assertSucceeds(deleteDoc(doc(owner(), 'users', OWNER, 'plans', TRIP)))
+  })
+
+  it('valida forma y tamaño', async () => {
+    await seed({ sharing: { enabled: false } })
+    await assertFails(setDoc(doc(owner(), 'users', OWNER, 'plans', TRIP), plan({ tripId: 'otro' })))
+    await assertFails(setDoc(doc(owner(), 'users', OWNER, 'plans', TRIP), plan({ stops: 'x' })))
+    await assertFails(setDoc(doc(owner(), 'users', OWNER, 'plans', TRIP), plan({ checklist: Array(501).fill({}) })))
+  })
+})

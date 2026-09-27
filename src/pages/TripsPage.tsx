@@ -2,15 +2,16 @@ import { useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAppData } from '../app/AppData'
 import { WishlistView } from '../components/WishlistView'
-import { newTrip, saveTrip } from '../lib/data'
+import { newTrip, savePlan, saveTrip } from '../lib/data'
 import { mapLink } from '../lib/links'
 import { STATUS_LABEL, flagEmoji } from '../lib/model'
+import { daysBetween, emptyPlan, todayIso } from '../lib/plan'
 import { formatTripRange, summarizeTrip } from '../lib/trips'
 import { t, tn } from '../lib/i18n'
 import './TripsPage.css'
 
 export function TripsPage() {
-  const { geo, entries, trips, uid, readOnly, basePath } = useAppData()
+  const { geo, entries, trips, plans, uid, readOnly, basePath } = useAppData()
   const navigate = useNavigate()
   const [name, setName] = useState('')
   const [params, setParams] = useSearchParams()
@@ -20,20 +21,24 @@ export function TripsPage() {
   const summaries = useMemo(
     () =>
       trips
-        .map((t) => summarizeTrip(geo, t, entries))
+        .map((t) => summarizeTrip(geo, t, entries, plans.get(t.id)))
         // Más recientes primero; los viajes sin fechas al final.
         .sort((a, b) => (b.start ?? '').localeCompare(a.start ?? '') || b.trip.createdAt - a.trip.createdAt),
-    [geo, trips, entries],
+    [geo, trips, entries, plans],
   )
 
-  const create = (e: React.FormEvent) => {
+  // «Planear» abre el planificador; «Registrar» lleva al mapa para asignar fechas pasadas.
+  const create = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!name.trim()) return
+    const plan = (e.nativeEvent as SubmitEvent).submitter?.getAttribute('value') !== 'past'
     const trip = newTrip(name.trim())
     void saveTrip(uid, trip)
+    if (plan) void savePlan(uid, emptyPlan(trip.id))
     setName('')
-    navigate(mapLink(basePath, `viaje=${trip.id}`))
+    navigate(plan ? `/viajes/${trip.id}` : mapLink(basePath, `viaje=${trip.id}`))
   }
+  const today = todayIso()
 
   return (
     <div className="trips-page">
@@ -60,7 +65,10 @@ export function TripsPage() {
                 <span>{t('Nuevo viaje')}</span>
                 <input value={name} maxLength={80} placeholder={t('Europa 2024, Luna de miel…')} onChange={(e) => setName(e.target.value)} />
               </label>
-              <button type="submit" className="btn btn--primary" disabled={!name.trim()}>{t('Crear viaje')}</button>
+              <div className="trips-page__new-actions">
+                <button type="submit" value="plan" className="btn btn--primary" disabled={!name.trim()}>{t('Planear viaje')}</button>
+                <button type="submit" value="past" className="btn" disabled={!name.trim()}>{t('Registrar viaje pasado')}</button>
+              </div>
             </form>
           )}
 
@@ -68,14 +76,21 @@ export function TripsPage() {
             <p className="notice">
               {readOnly
                 ? t('Todavía no hay viajes.')
-                : t('Crea un viaje y luego, al añadir fechas a un lugar, elige a qué viaje pertenecen.')}
+                : t('Planea tu próximo viaje, o registra uno pasado y, al añadir fechas a un lugar, elige a qué viaje pertenecen.')}
             </p>
           ) : (
             <ul className="trips-grid">
               {summaries.map((s) => (
                 <li key={s.trip.id}>
-                  <Link className="trip-card" to={mapLink(basePath, `viaje=${s.trip.id}`)}>
-                    <span className="trip-card__head label">{formatTripRange(s.start, s.end)}</span>
+                  <Link className="trip-card" to={!readOnly && plans.has(s.trip.id) ? `/viajes/${s.trip.id}` : mapLink(basePath, `viaje=${s.trip.id}`)}>
+                    <span className="trip-card__head label">
+                      <span>{formatTripRange(s.start, s.end)}</span>
+                      {s.start && s.start > today ? (
+                        <span className="trip-card__soon">{tn(daysBetween(today, s.start), 'en {n} día', 'en {n} días')}</span>
+                      ) : s.start && s.end && s.start <= today && today <= s.end ? (
+                        <span className="trip-card__soon">{t('en curso')}</span>
+                      ) : null}
+                    </span>
                     <span className="trip-card__body">
                       <strong className="trip-card__name">{s.trip.name}</strong>
                       <span className="trip-card__flags" aria-label={s.countryIds.map((id) => geo.countries[id]?.name).join(', ')}>
@@ -85,7 +100,7 @@ export function TripsPage() {
                     <span className="trip-card__foot mono">
                       <span>{tn(s.days, '{n} día', '{n} días')}</span>
                       <span>{tn(s.countryIds.length, '{n} país', '{n} países')}</span>
-                      <span>{tn(s.stops.length, '{n} parada', '{n} paradas')}</span>
+                      <span>{tn(s.plannedStops ?? s.stops.length, '{n} parada', '{n} paradas')}</span>
                     </span>
                   </Link>
                 </li>

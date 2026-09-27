@@ -41,7 +41,7 @@ interface ProviderProps {
 
 export function AppDataProvider({ uid, readOnly, basePath, tripId = null, children }: ProviderProps) {
   const { geo: rawGeo, error: geoError } = useGeo()
-  const raw = useUserData(uid, tripId)
+  const raw = useUserData(uid, tripId, !readOnly)
   const profile = useProfile(uid)
   // Nombres de países en el idioma activo (la app se vuelve a montar al cambiar de idioma).
   const geo = useMemo(() => (rawGeo ? localizeGeo(rawGeo) : null), [rawGeo])

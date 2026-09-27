@@ -5,6 +5,10 @@ import type { Country, Geo, Region } from '../../src/lib/geo'
 import { buildJourney, greatCircle, splitAntimeridian, wrapLon } from '../../src/lib/journey'
 import { emptyEntry, rangeDays, summarizeCountries, type Entry } from '../../src/lib/model'
 import { uniqueDays } from '../../src/lib/stats'
+import {
+  budgetTotals, closingEntries, emptyPlan, estimateLeg, haversineKm, isBarePlanned, mergeChecklist, needsClosing, planDays, schedule,
+  type PlanStop, type TripPlan,
+} from '../../src/lib/plan'
 
 // --- Geo mínimo de prueba ---
 const country = (id: string, over: Partial<Country> = {}): Country => ({
@@ -150,5 +154,77 @@ describe('copias de seguridad', () => {
     expect(parseBackup(JSON.stringify({ foo: 1 }))).toHaveProperty('error')
     expect(parseBackup(JSON.stringify({ ...valid, entries: [{ ...valid.entries[0], status: 'volado' }] }))).toHaveProperty('error')
     expect(parseBackup(JSON.stringify({ ...valid, entries: [{ ...valid.entries[0], key: 'city:2' }] }))).toHaveProperty('error')
+  })
+})
+
+describe('planificador', () => {
+  const stop = (id: string, nights: number, extra: Partial<PlanStop> = {}): PlanStop => ({
+    id, nights, activities: [],
+    place: { type: 'city', id, name: id, countryId: 'SLV', regionId: null, lon: null, lat: null },
+    ...extra,
+  })
+  const plan = (over: Partial<TripPlan> = {}): TripPlan => ({ ...emptyPlan('t1'), start: '2026-03-10', stops: [stop('a', 2), stop('b', 0), stop('c', 3)], ...over })
+
+  it('encadena paradas: se sale el mismo día que se llega a la siguiente', () => {
+    const s = schedule(plan())
+    expect(s.stops.map((x) => [x.arriveDate, x.departDate])).toEqual([
+      ['2026-03-10', '2026-03-12'],
+      ['2026-03-12', '2026-03-12'],
+      ['2026-03-12', '2026-03-15'],
+    ])
+    expect(s.totalDays).toBe(6)
+    expect(s.end).toBe('2026-03-15')
+    expect(schedule({ start: null, stops: [] }).totalDays).toBe(0)
+  })
+
+  it('día a día: traslados y actividades (recortadas si se acorta la estancia)', () => {
+    const p = plan({ stops: [stop('a', 2, { activities: [{ id: 'x', day: 5, time: null, text: 'museo', done: false }] }), stop('c', 1)] })
+    const days = planDays(schedule(p))
+    expect(days.map((d) => d.stops.map((s) => s.stop.id).join('>'))).toEqual(['a', 'a', 'a>c', 'c'])
+    expect(days[2].activities.map((a) => a.activity.text)).toEqual(['museo'])
+  })
+
+  it('distancias y modo de trayecto', () => {
+    expect(Math.round(haversineKm([-9.14, 38.72], [-3.7, 40.42]))).toBeGreaterThan(490)
+    expect(estimateLeg(300).mode).toBe('ground')
+    expect(estimateLeg(2000).mode).toBe('flight')
+  })
+
+  it('totales por moneda', () => {
+    const b = (amount: number | null, currency: string, paid: boolean) => ({ id: 'x', kind: 'other' as const, title: 'x', amount, currency, paid, date: null, confirmation: '', url: '', stopId: null })
+    expect(budgetTotals([b(100, 'USD', true), b(50, 'USD', false), b(20, 'EUR', false), b(null, 'EUR', true)])).toEqual([
+      { currency: 'USD', total: 150, paid: 100 },
+      { currency: 'EUR', total: 20, paid: 0 },
+    ])
+  })
+
+  it('checklist: no duplica textos', () => {
+    const a = [{ id: '1', group: 'docs' as const, text: 'Pasaporte', done: true }]
+    const merged = mergeChecklist(a, [{ id: '2', group: 'docs', text: 'pasaporte ', done: true }, { id: '3', group: 'luggage', text: 'Cargador', done: true }])
+    expect(merged.map((i) => [i.text, i.done])).toEqual([['Pasaporte', true], ['Cargador', false]])
+  })
+
+  it('cierre: propone solo viajes terminados y marca Visitado con fechas del viaje', () => {
+    const p = plan()
+    expect(needsClosing(p, '2026-03-15')).toBe(false)
+    expect(needsClosing(p, '2026-03-16')).toBe(true)
+    expect(needsClosing({ ...p, closed: true }, '2026-04-01')).toBe(false)
+
+    const lived = mk('city', 'a', 'SLV', { status: 'lived' })
+    const planned = mk('city', 'c', 'SLV', { status: 'planned' })
+    const out = closingEntries(p, [lived, planned], new Set(['a', 'c']))
+    const a = out.find((e) => e.placeId === 'a')!
+    const c = out.find((e) => e.placeId === 'c')!
+    expect(a.status).toBe('lived')
+    expect(a.dates).toEqual([{ start: '2026-03-10', end: '2026-03-12', tripId: 't1' }])
+    expect(c.status).toBe('visited')
+    expect(c.dates).toEqual([{ start: '2026-03-12', end: '2026-03-15', tripId: 't1' }])
+    expect(out.some((e) => e.placeId === 'b')).toBe(false)
+  })
+
+  it('una entrada Planeado vacía se puede borrar; con datos propios, no', () => {
+    expect(isBarePlanned(mk('city', 'a', 'SLV', { status: 'planned' }))).toBe(true)
+    expect(isBarePlanned(mk('city', 'a', 'SLV', { status: 'planned', tags: ['x'] }))).toBe(false)
+    expect(isBarePlanned(mk('city', 'a', 'SLV', { status: 'visited' }))).toBe(false)
   })
 })

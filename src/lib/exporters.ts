@@ -2,6 +2,7 @@
 import { CONTINENTS, type Geo } from './geo'
 import { PLACE_TYPE_LABEL, STATUSES, STATUS_LABEL, rangeDays, type Entry, type PlaceType, type Trip } from './model'
 import { getLang, t } from './i18n'
+import type { TripPlan } from './plan'
 
 export function download(filename: string, data: Blob) {
   const url = URL.createObjectURL(data)
@@ -55,10 +56,11 @@ export interface Backup {
   exportedAt: string
   entries: Entry[]
   trips: Trip[]
+  plans?: TripPlan[]
 }
 
-export function backupToJson(entries: Entry[], trips: Trip[]): Blob {
-  const backup: Backup = { app: 'wxlter-mapa', version: 1, exportedAt: new Date().toISOString(), entries, trips }
+export function backupToJson(entries: Entry[], trips: Trip[], plans: TripPlan[] = []): Blob {
+  const backup: Backup = { app: 'wxlter-mapa', version: 1, exportedAt: new Date().toISOString(), entries, trips, plans }
   return new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' })
 }
 
@@ -87,6 +89,9 @@ export function parseBackup(text: string): { backup: Backup } | { error: string 
   for (const trip of b.trips) {
     if (typeof trip?.id !== 'string' || typeof trip.name !== 'string') return { error: t('Un viaje del archivo está incompleto. Revisa el archivo.') }
   }
+  if (b.plans != null && (!Array.isArray(b.plans) || b.plans.some((p) => typeof p?.tripId !== 'string' || !Array.isArray(p.stops)))) {
+    return { error: t('Un plan de viaje del archivo está incompleto. Revisa el archivo.') }
+  }
   return { backup: b as Backup }
 }
 
@@ -110,6 +115,14 @@ export async function restoreBackup(uid: string, backup: Backup) {
   for (let i = 0; i < trips.length; i += 400) {
     const batch = writeBatch(db)
     for (const t of trips.slice(i, i + 400)) batch.set(doc(collection(db, 'users', uid, 'trips'), t.id), t)
+    await batch.commit()
+  }
+  // Planes de copias antiguas o editadas a mano: valores por defecto para lo que falte.
+  const planDefaults: Partial<TripPlan> = { bookings: [], checklist: [], closed: false, travelers: 1, currency: 'USD', start: null }
+  const plans = (backup.plans ?? []).map((p) => ({ ...planDefaults, ...p, updatedAt: Date.now() }) as TripPlan)
+  for (let i = 0; i < plans.length; i += 400) {
+    const batch = writeBatch(db)
+    for (const p of plans.slice(i, i + 400)) batch.set(doc(collection(db, 'users', uid, 'plans'), p.tripId), p)
     await batch.commit()
   }
   for (let i = 0; i < entries.length; i += 200) {

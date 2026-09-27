@@ -33,6 +33,7 @@ function PrivacyEs() {
       <ul>
         <li><strong>Tu cuenta:</strong> correo y contraseña (cifrada), gestionados por Firebase Authentication de Google.</li>
         <li><strong>Tu mapa:</strong> lugares, fechas, viajes, descripciones, etiquetas, valoraciones, personas y tu nombre visible.</li>
+        <li><strong>Tus planes de viaje:</strong> itinerario, actividades, reservas (con números de confirmación), presupuesto y checklist. Son solo tuyos: ningún link compartido los muestra.</li>
         <li><strong>Tus fotos:</strong> se reducen y convierten a WebP en tu dispositivo antes de subirlas.</li>
       </ul>
 

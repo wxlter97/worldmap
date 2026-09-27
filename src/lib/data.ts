@@ -18,10 +18,13 @@ import { deleteObject, getDownloadURL, ref, uploadBytes } from 'firebase/storage
 import { useEffect, useMemo, useState } from 'react'
 import { db, storage } from './firebase'
 import type { Entry, Trip } from './model'
+import { isBarePlanned, stopKey, type TripPlan } from './plan'
 
 const entriesCol = (uid: string) => collection(db, 'users', uid, 'entries')
 const notesCol = (uid: string) => collection(db, 'users', uid, 'notes')
 const tripsCol = (uid: string) => collection(db, 'users', uid, 'trips')
+// Planes de viaje: privados (reservas, presupuesto), solo los lee el dueño.
+const plansCol = (uid: string) => collection(db, 'users', uid, 'plans')
 // "city:123" es un id de documento válido; se codifica por si algún id trae "/".
 export const docId = (key: string) => encodeURIComponent(key)
 
@@ -35,6 +38,7 @@ interface Note {
 export interface UserData {
   entries: Entry[]
   trips: Trip[]
+  plans: Map<string, TripPlan> // tripId → plan (vacío en links compartidos)
   loading: boolean
   error: string | null
   pendingWrites: boolean // cambios guardados en el dispositivo que aún no llegan al servidor
@@ -45,8 +49,9 @@ export interface UserData {
  * - Dueño o link del mapa completo: todas las entradas; las notas si las reglas lo permiten.
  * - Link de un viaje (`tripId`): solo las entradas y el viaje compartido.
  */
-export function useUserData(uid: string | null, tripId: string | null = null): UserData {
-  const [state, setState] = useState<UserData>({ entries: [], trips: [], loading: true, error: null, pendingWrites: false })
+export function useUserData(uid: string | null, tripId: string | null = null, owner = true): UserData {
+  const [state, setState] = useState<Omit<UserData, 'plans'>>({ entries: [], trips: [], loading: true, error: null, pendingWrites: false })
+  const [plans, setPlans] = useState<Map<string, TripPlan>>(new Map())
   const [rawEntries, setRawEntries] = useState<Entry[]>([])
   const [notes, setNotes] = useState<Map<string, Note>>(new Map())
 
@@ -82,12 +87,21 @@ export function useUserData(uid: string | null, tripId: string | null = null): U
           (snap) => setNotes(new Map(snap.docs.map((d) => [decodeURIComponent(d.id), d.data() as Note]))),
           () => setNotes(new Map()),
         )
+    // Planes: privados, solo para el dueño (las reglas no los dejan leer en links compartidos).
+    const unsubPlans = owner
+      ? onSnapshot(
+          plansCol(uid),
+          (snap) => setPlans(new Map(snap.docs.map((d) => [d.id, { ...(d.data() as TripPlan), tripId: d.id }]))),
+          () => setPlans(new Map()),
+        )
+      : () => undefined
     return () => {
       unsubEntries()
       unsubTrips()
       unsubNotes()
+      unsubPlans()
     }
-  }, [uid, tripId])
+  }, [uid, tripId, owner])
 
   // Link de un viaje: las notas se piden una a una (las reglas comprueban que la entrada sea del viaje).
   const keysSig = tripId ? rawEntries.map((e) => e.key).sort().join('|') : ''
@@ -114,7 +128,7 @@ export function useUserData(uid: string | null, tripId: string | null = null): U
     [rawEntries, notes],
   )
 
-  return useMemo(() => ({ ...state, entries }), [state, entries])
+  return useMemo(() => ({ ...state, entries, plans }), [state, entries, plans])
 }
 
 /** Documento de entrada sin campos privados y con `tripIds` derivado de las fechas. */
@@ -151,15 +165,62 @@ export function saveTrip(uid: string, trip: Trip) {
   return setDoc(doc(tripsCol(uid), trip.id), { ...trip, updatedAt: Date.now() })
 }
 
-/** Borra el viaje y quita su referencia de las fechas que lo usaban (las fechas se conservan). */
-export function deleteTrip(uid: string, id: string, entries: Entry[]) {
+/**
+ * Borra el viaje y quita su referencia de las fechas que lo usaban (las fechas se conservan).
+ * Las paradas de su plan que solo existían como «Planeado» vacío también se borran.
+ */
+export function deleteTrip(uid: string, id: string, entries: Entry[], plans: Map<string, TripPlan> = new Map()) {
   const batch = writeBatch(db)
+  const others = new Set([...plans.values()].filter((p) => p.tripId !== id).flatMap((p) => p.stops.map(stopKey)))
+  const byKey = new Map(entries.map((e) => [e.key, e]))
+  for (const key of new Set(plans.get(id)?.stops.map(stopKey) ?? [])) {
+    const e = byKey.get(key)
+    if (e && isBarePlanned(e) && !others.has(key)) {
+      batch.delete(doc(entriesCol(uid), docId(key)))
+      batch.delete(doc(notesCol(uid), docId(key)))
+    }
+  }
   for (const e of entries) {
     if (!e.dates.some((d) => d.tripId === id)) continue
     writeEntry(batch, uid, { ...e, dates: e.dates.map((d) => (d.tripId === id ? { ...d, tripId: null } : d)) })
   }
   batch.delete(doc(tripsCol(uid), id))
+  batch.delete(doc(plansCol(uid), id))
   batch.set(doc(db, 'users', uid), { sharedTrips: arrayRemove(id), tripShares: { [id]: deleteField() } }, { merge: true })
+  return batch.commit()
+}
+
+export function savePlan(uid: string, plan: TripPlan) {
+  return setDoc(doc(plansCol(uid), plan.tripId), { ...plan, updatedAt: Date.now() })
+}
+
+/**
+ * Guarda el plan y sincroniza el mapa: las paradas nuevas sin entrada se marcan «Planeado»;
+ * las quitadas se borran si eran una entrada «Planeado» vacía que ya nadie usa.
+ */
+export function savePlanWithEntries(uid: string, plan: TripPlan, previous: TripPlan | null, entries: Entry[], allPlans: Map<string, TripPlan>, created: Entry[] = []) {
+  const batch = writeBatch(db)
+  batch.set(doc(plansCol(uid), plan.tripId), { ...plan, updatedAt: Date.now() })
+  const byKey = new Map(entries.map((e) => [e.key, e]))
+  for (const e of created) if (!byKey.has(e.key)) writeEntry(batch, uid, e)
+  const now = new Set(plan.stops.map(stopKey))
+  const inOtherPlans = new Set([...allPlans.values()].filter((p) => p.tripId !== plan.tripId).flatMap((p) => p.stops.map(stopKey)))
+  for (const s of previous?.stops ?? []) {
+    const key = stopKey(s)
+    const e = byKey.get(key)
+    if (!now.has(key) && !inOtherPlans.has(key) && e && isBarePlanned(e)) {
+      batch.delete(doc(entriesCol(uid), docId(key)))
+      batch.delete(doc(notesCol(uid), docId(key)))
+    }
+  }
+  return batch.commit()
+}
+
+/** Cierre del viaje: escribe las entradas visitadas y marca el plan como resuelto. */
+export function closePlan(uid: string, plan: TripPlan, visited: Entry[]) {
+  const batch = writeBatch(db)
+  for (const e of visited) writeEntry(batch, uid, e)
+  batch.set(doc(plansCol(uid), plan.tripId), { ...plan, closed: true, updatedAt: Date.now() })
   return batch.commit()
 }
 

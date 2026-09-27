@@ -2,6 +2,7 @@
 import type { Geo } from './geo'
 import type { DateRange, Entry, Trip } from './model'
 import { uniqueDays } from './stats'
+import { schedule, type TripPlan } from './plan'
 import { locale } from './i18n'
 import { t } from './i18n'
 
@@ -19,6 +20,7 @@ export interface TripSummary {
   end: string | null
   days: number
   countryIds: string[] // en orden de aparición
+  plannedStops?: number // resumen tomado del plan (viaje por hacer)
 }
 
 const TYPE_ORDER: Record<Entry['type'], number> = { country: 0, region: 1, city: 2, landmark: 3, custom: 3 }
@@ -46,8 +48,21 @@ export function tripStops(geo: Geo, tripId: string, entries: Entry[]): TripStop[
   )
 }
 
-export function summarizeTrip(geo: Geo, trip: Trip, entries: Entry[]): TripSummary {
+export function summarizeTrip(geo: Geo, trip: Trip, entries: Entry[], plan?: TripPlan | null): TripSummary {
   const stops = tripStops(geo, trip.id, entries)
+  // Viaje aún sin fechas registradas: el resumen sale del plan.
+  if (!stops.length && plan?.stops.length) {
+    const s = schedule(plan)
+    return {
+      trip,
+      stops: [],
+      start: s.start,
+      end: s.end,
+      days: s.totalDays,
+      countryIds: [...new Set(plan.stops.map((x) => x.place.countryId))],
+      plannedStops: plan.stops.length,
+    }
+  }
   const countryIds: string[] = []
   for (const s of stops) if (!countryIds.includes(s.entry.countryId)) countryIds.push(s.entry.countryId)
   const ends = stops.map((s) => s.range.end || s.range.start).sort()

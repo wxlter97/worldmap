@@ -60,6 +60,11 @@ npm run build:data   # simplifica y escribe public/data/
 - % del país = área de las regiones visitadas / área total, salvo override manual en la entrada del país.
 - **Viajes** (`users/{uid}/trips/{id}`): nombre + descripción. Cada rango de fechas de una entrada puede apuntar a un viaje
   (`dates[].tripId`); el itinerario, las fechas y los días del viaje se derivan de ahí. Borrar un viaje conserva las fechas.
+- **Planificador** (`/viajes/{id}`, `src/lib/plan.ts`): plan privado en `users/{uid}/plans/{tripId}` (solo el dueño,
+  nunca en links). Paradas en orden con noches (se sale el mismo día que se llega a la siguiente), actividades por día,
+  distancia y tiempo aproximado entre paradas, reservas y gastos (totales por moneda, pagado/pendiente, por persona) y
+  checklist con lista sugerida o copiada de otro viaje. Añadir una parada crea la entrada «Planeado» si no existía; quitarla
+  la borra si seguía vacía. Pasada la fecha de fin, propone marcar las paradas como Visitado con sus fechas y el viaje.
 - **Líneas de viaje y repetición**: paradas Vivido/Visitado/Escala ordenadas por fecha (`src/lib/journey.ts`), unidas
   con arcos de círculo máximo cortados en el antimeridiano. La repetición pinta el mapa solo con lo visitado hasta cada fecha.
 - **Logros** (`src/lib/achievements.ts`): 30 logros en 6 grupos, evaluados en orden cronológico para fechar el desbloqueo.

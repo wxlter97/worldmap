@@ -5,6 +5,7 @@ rules_version = '2';
 //   users/{uid}/entries/{key}   una entrada por lugar ("country:SLV", "city:3583361", …) con tripIds derivado de sus fechas
 //   users/{uid}/notes/{key}     datos privados de la entrada: description, people
 //   users/{uid}/trips/{id}      viajes
+//   users/{uid}/plans/{id}      plan de un viaje (itinerario, reservas, checklist): privado, nunca compartido
 //   shares/{token}              { uid, displayName, tripId? } — resuelve un link de solo lectura (mapa o viaje)
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -42,6 +43,15 @@ service cloud.firestore {
       match /trips/{tripId} {
         allow read: if isOwner(uid) || sharingEnabled(uid) || tripId in sharedTrips(uid);
         allow write: if isOwner(uid);
+      }
+
+      match /plans/{tripId} {
+        allow read, delete: if isOwner(uid);
+        allow create, update: if isOwner(uid)
+          && request.resource.data.tripId == tripId
+          && request.resource.data.stops is list && request.resource.data.stops.size() <= 150
+          && request.resource.data.bookings is list && request.resource.data.bookings.size() <= 500
+          && request.resource.data.checklist is list && request.resource.data.checklist.size() <= 500;
       }
     }
 

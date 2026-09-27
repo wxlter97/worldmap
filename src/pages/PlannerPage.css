@@ -1,0 +1,553 @@
+.planner {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: var(--sp-8);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-6);
+}
+
+.planner__back {
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+  align-self: flex-start;
+}
+
+.planner__back:hover {
+  text-decoration: underline;
+}
+
+.planner__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: var(--sp-4);
+  padding-bottom: var(--sp-3);
+  border-bottom: var(--border-section);
+}
+
+.planner__head h1 {
+  font-size: clamp(28px, 5vw, 44px);
+  overflow-wrap: anywhere;
+}
+
+.planner__flags {
+  margin-top: var(--sp-2);
+  font-size: 22px;
+}
+
+.planner__countdown {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 14px;
+  border: var(--border);
+  background: var(--brand-faro);
+  color: var(--on-faro);
+}
+
+.planner__countdown strong {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 32px;
+  line-height: 1;
+}
+
+.planner__summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.planner__map {
+  margin-left: auto;
+  text-decoration: none;
+}
+
+.planner__settings {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--sp-3);
+}
+
+.planner__closing {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.planner__closing p {
+  margin: 0;
+}
+
+.planner__closing-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.planner__closing-list label {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-2);
+  cursor: pointer;
+}
+
+.planner__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.planner__panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-6);
+}
+
+.planner__section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.planner__section-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.planner__h2 {
+  font-size: var(--fs-20);
+}
+
+.planner__small {
+  font-size: 12px;
+}
+
+.planner input[type='checkbox'] {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  accent-color: var(--fg);
+}
+
+/* --- Paradas --- */
+.plan-stops {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.plan-stop {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: 10px 12px 10px 4px;
+  border: var(--border);
+  background: var(--surface);
+}
+
+.plan-stop--drag {
+  background: var(--brand-faro);
+  color: var(--on-faro);
+  position: relative;
+  z-index: 1;
+  box-shadow: 4px 4px 0 var(--line);
+}
+
+.plan-stop--drag .muted {
+  color: var(--on-faro-soft);
+}
+
+.plan-stop__handle {
+  width: 28px;
+  min-height: var(--touch);
+  border: 0;
+  background: none;
+  color: inherit;
+  font-weight: 700;
+  letter-spacing: -3px;
+  cursor: grab;
+  touch-action: none;
+}
+
+.plan-stop--drag .plan-stop__handle {
+  cursor: grabbing;
+}
+
+.plan-stop__n {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.plan-stop__main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.plan-stop__main strong {
+  overflow-wrap: anywhere;
+}
+
+.plan-stop__main .mono {
+  font-size: 11px;
+}
+
+.plan-stop__nights {
+  display: flex;
+  align-items: center;
+  border: var(--border);
+}
+
+.plan-stop__nights button {
+  width: 34px;
+  min-height: 34px;
+  border: 0;
+  background: none;
+  color: inherit;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.plan-stop__nights button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.plan-stop__nights span {
+  min-width: 78px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.plan-stop__actions {
+  display: flex;
+  gap: 4px;
+}
+
+.plan-stop__actions .icon-btn:disabled {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.plan-leg {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 6px 0 6px 44px;
+  font-size: 11px;
+  color: var(--fg-muted);
+  border-left: 3px dashed var(--line-soft);
+  margin-left: 18px;
+}
+
+.plan-stop + .plan-stop {
+  border-top: 0;
+}
+
+.planner__add-stop {
+  position: relative;
+}
+
+/* --- Día a día --- */
+.plan-days {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.plan-day {
+  border: var(--border);
+  background: var(--surface);
+}
+
+.plan-day__head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--sp-2);
+  padding: 10px 14px;
+  border-bottom: var(--border);
+  background: var(--inv-bg);
+  color: var(--inv-fg);
+}
+
+.plan-day__head strong {
+  color: var(--inv-fg-plain);
+  overflow-wrap: anywhere;
+}
+
+.plan-day__add {
+  margin: 10px 14px;
+}
+
+.plan-acts,
+.plan-checklist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.plan-act {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 6px 8px 6px 14px;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.plan-checklist .plan-act {
+  border: var(--border);
+  background: var(--surface);
+}
+
+.plan-checklist .plan-act + .plan-act {
+  border-top: 0;
+}
+
+.plan-act label {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  min-height: 36px;
+  cursor: pointer;
+}
+
+.plan-act__time {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.plan-act__text {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.plan-act__stop {
+  font-size: 11px;
+}
+
+.plan-act--done .plan-act__text {
+  text-decoration: line-through;
+  color: var(--fg-muted);
+}
+
+.plan-act-form {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  gap: var(--sp-3);
+  padding: 12px 14px;
+}
+
+.plan-act-form__stop,
+.plan-act-form__actions {
+  grid-column: 1 / -1;
+}
+
+/* --- Presupuesto --- */
+.plan-totals {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--sp-3);
+}
+
+.plan-totals__body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+}
+
+.plan-totals__body strong {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 28px;
+}
+
+.plan-totals__body .mono {
+  font-size: 11px;
+}
+
+.plan-booking-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  border: var(--border);
+  background: var(--surface);
+}
+
+.plan-booking-form__wide {
+  grid-column: 1 / -1;
+}
+
+.plan-check {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.plan-bookings {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.plan-booking {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: var(--sp-3);
+  padding: 12px 14px;
+  border: var(--border);
+  background: var(--surface);
+}
+
+.plan-booking + .plan-booking {
+  border-top: 0;
+}
+
+.plan-booking__main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.plan-booking__main strong {
+  overflow-wrap: anywhere;
+}
+
+.plan-booking__main .mono {
+  font-size: 11px;
+}
+
+.plan-booking__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  margin-top: 2px;
+}
+
+.plan-booking__meta b {
+  user-select: all;
+}
+
+.plan-booking__side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.plan-booking__side .badge {
+  cursor: pointer;
+}
+
+/* --- Checklist --- */
+.plan-progress {
+  height: 10px;
+  border: var(--border);
+  background: var(--surface);
+}
+
+.plan-progress i {
+  display: block;
+  height: 100%;
+  background: var(--brand-faro);
+  transition: width 200ms;
+}
+
+.plan-copy {
+  width: auto;
+  min-height: 36px;
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+.plan-check-form {
+  display: grid;
+  grid-template-columns: 160px minmax(0, 1fr) auto;
+  align-items: end;
+  gap: var(--sp-3);
+}
+
+@media (max-width: 600px) {
+  .planner {
+    padding: var(--sp-4) 16px var(--sp-12);
+    gap: var(--sp-4);
+  }
+
+  .planner__settings {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .planner__settings .field:first-child {
+    grid-column: 1 / -1;
+  }
+
+  .planner__countdown strong {
+    font-size: 24px;
+  }
+
+  .plan-stop {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      'handle main actions'
+      'handle nights nights';
+    row-gap: var(--sp-2);
+  }
+
+  .plan-stop__handle { grid-area: handle; }
+  .plan-stop__n { display: none; }
+  .plan-stop__main { grid-area: main; }
+  .plan-stop__actions { grid-area: actions; }
+  .plan-stop__nights { grid-area: nights; justify-self: start; }
+
+  .plan-leg {
+    padding-left: 24px;
+  }
+
+  .plan-booking {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .plan-booking > .badge {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+
+  .plan-check-form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .plan-act-form {
+    grid-template-columns: 110px minmax(0, 1fr);
+  }
+}
