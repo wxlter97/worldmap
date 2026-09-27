@@ -170,7 +170,9 @@ for (const line of fs.readFileSync(path.join(RAW, 'cities15000.txt'), 'utf8').sp
   const pt = [Number(c[5]), Number(c[4])]
   const country = iso2ToId[c[8]] ?? countryAt(pt)
   if (!country) { droppedCities++; continue }
-  const name = shortCityName(namesEs[c[0]], c[1])
+  // Capitales sin etiqueta en español: "Guatemala City" → "Ciudad de Guatemala".
+  const fallback = c[7] === 'PPLC' && / City$/.test(c[1]) ? `Ciudad de ${c[1].replace(/ City$/, '')}` : c[1]
+  const name = shortCityName(namesEs[c[0]], fallback)
   // [id, nombre, país, región, lon, lat, población, esCapital]
   const region = regionAt(country, pt) ?? regionByGeonamesCode[`${c[8]}.${c[10]}`] ?? null
   cities.push([Number(c[0]), name, country, region, round(pt[0]), round(pt[1]), Number(c[14]), c[7] === 'PPLC' ? 1 : 0])
