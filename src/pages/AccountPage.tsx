@@ -2,12 +2,13 @@ import { signOut } from 'firebase/auth'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAppData } from '../app/AppData'
-import { disableSharing, enableSharing, saveDisplayName } from '../lib/data'
+import { ChangePassword, DeleteAccount, EmailVerification } from '../components/AccountSecurity'
+import { disableSharing, enableSharing, saveDisplayName, setShowNotes } from '../lib/data'
 import { auth } from '../lib/firebase'
 import './AccountPage.css'
 
 export function AccountPage() {
-  const { uid, profile } = useAppData()
+  const { uid, profile, trips } = useAppData()
   const [name, setName] = useState(profile.displayName)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -74,9 +75,23 @@ export function AccountPage() {
           />
         </div>
         <p className="account-copy">
-          Quien tenga el link verá tu mapa, lista, viajes y estadísticas, incluidas descripciones, fotos, etiquetas
-          y personas. No puede editar nada ni ver tu correo.
+          Quien tenga el link verá tu mapa, lista, viajes, estadísticas y fotos. No puede editar nada ni ver tu correo.
         </p>
+        <label className="account-toggle">
+          <button
+            type="button"
+            className="toggle"
+            role="switch"
+            aria-checked={!!profile.sharing.showNotes}
+            aria-label="Mostrar notas y personas en los links"
+            disabled={busy}
+            onClick={() => void run(() => setShowNotes(uid, !profile.sharing.showNotes))}
+          />
+          <span>
+            <strong>Mostrar notas y personas</strong>
+            <span className="muted"> — descripciones y «con quién» en este link y en los links de viajes.</span>
+          </span>
+        </label>
 
         {link ? (
           <>
@@ -104,15 +119,38 @@ export function AccountPage() {
         {error && <p className="field-error" role="alert">{error}</p>}
       </section>
 
+      {Object.keys(profile.tripShares ?? {}).length > 0 && (
+        <section className="account-section">
+          <h2>Viajes compartidos</h2>
+          <ul className="account-trips">
+            {Object.entries(profile.tripShares ?? {}).map(([tripId, token]) => (
+              <li key={tripId}>
+                <Link to={`/?viaje=${tripId}`}>{trips.find((t) => t.id === tripId)?.name ?? 'Viaje'}</Link>
+                <span className="mono muted">/s/{token}</span>
+              </li>
+            ))}
+          </ul>
+          <p className="account-copy">Para dejar de compartir un viaje, ábrelo y usa «Dejar de compartir».</p>
+        </section>
+      )}
+
       <section className="account-section">
         <h2>Exportar</h2>
         <p className="account-copy">Póster para imprimir o compartir, CSV para hojas de cálculo y copia de seguridad JSON.</p>
         <Link to="/exportar" className="btn account-link-btn">Ir a Exportar →</Link>
       </section>
 
+      <EmailVerification />
+      <ChangePassword />
+
       <section className="account-section">
-        <button type="button" className="btn" onClick={() => signOut(auth)}>Cerrar sesión</button>
+        <p className="account-copy">
+          <Link to="/privacidad">Privacidad: qué se guarda y quién lo ve</Link>
+        </p>
+        <button type="button" className="btn account-link-btn" onClick={() => signOut(auth)}>Cerrar sesión</button>
       </section>
+
+      <DeleteAccount />
     </div>
   )
 }

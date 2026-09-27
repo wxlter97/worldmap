@@ -1,11 +1,22 @@
 rules_version = '2';
 
 // Fotos: users/{uid}/photos/{file}. Máx. 5 MB, solo imágenes.
+// Los nombres son UUID aleatorios y solo el dueño puede listar la carpeta: quien tenga un link compartido
+// (del mapa o de un viaje) puede abrir una foto solo si conoce su ruta, que obtiene de la entrada que sí puede leer.
 service firebase.storage {
   match /b/{bucket}/o {
+    function profile(uid) { return firestore.get(/databases/(default)/documents/users/$(uid)).data; }
+    function publicPhotos(uid) {
+      return profile(uid).get('sharing', {}).get('enabled', false) == true || profile(uid).get('sharedTrips', []).size() > 0;
+    }
+
+    match /users/{uid}/photos {
+      allow list: if request.auth != null && request.auth.uid == uid;
+    }
+
     match /users/{uid}/photos/{file} {
-      allow read: if request.auth != null && request.auth.uid == uid
-        || firestore.get(/databases/(default)/documents/users/$(uid)).data.get('sharing', {}).get('enabled', false) == true;
+      allow get: if request.auth != null && request.auth.uid == uid || publicPhotos(uid);
+      allow list: if request.auth != null && request.auth.uid == uid;
       allow write: if request.auth != null && request.auth.uid == uid
         && (request.resource == null
             || (request.resource.size < 5 * 1024 * 1024 && request.resource.contentType.matches('image/.*')));

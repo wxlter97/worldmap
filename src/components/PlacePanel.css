@@ -211,3 +211,14 @@
 .itinerary button:hover .muted {
   color: var(--ink-soft);
 }
+
+.panel__share {
+  display: flex;
+  gap: var(--sp-2);
+}
+
+.panel__share .input {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+}

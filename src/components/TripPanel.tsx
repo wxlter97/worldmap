@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { deleteTrip, saveTrip } from '../lib/data'
+import { useAppData } from '../app/AppData'
+import { deleteTrip, disableTripShare, enableTripShare, saveTrip } from '../lib/data'
 import type { Geo } from '../lib/geo'
 import { PLACE_TYPE_LABEL, STATUS_LABEL, flagEmoji, formatRange, type Entry } from '../lib/model'
 import type { Place } from '../lib/search'
@@ -90,6 +91,8 @@ export function TripPanel({ uid, geo, summary, entries, onOpen, onClose, onDelet
         )}
       </section>
 
+      {uid && <TripShare uid={uid} summary={summary} entries={entries} />}
+
       <section className="panel__section">
         <h3 className="panel__h3">Itinerario</h3>
         {stops.length === 0 ? (
@@ -117,5 +120,61 @@ export function TripPanel({ uid, geo, summary, entries, onOpen, onClose, onDelet
         )}
       </section>
     </article>
+  )
+}
+
+function TripShare({ uid, summary, entries }: { uid: string; summary: TripSummary; entries: Entry[] }) {
+  const { profile } = useAppData()
+  const [busy, setBusy] = useState(false)
+  const [copied, setCopied] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const token = profile.tripShares?.[summary.trip.id]
+  const link = token ? `${location.origin}/s/${token}` : null
+
+  const run = async (fn: () => Promise<unknown>) => {
+    setBusy(true)
+    setError(null)
+    try {
+      await fn()
+    } catch {
+      setError('No se pudo actualizar el link. Revisa tu conexión: compartir necesita estar en línea.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <section className="panel__section">
+      <h3 className="panel__h3">Compartir este viaje</h3>
+      <p className="panel__small muted">
+        Un link que muestra solo este viaje: sus lugares, fechas y fotos.{' '}
+        {profile.sharing.showNotes ? 'Incluye notas y personas.' : 'Sin notas ni personas (cámbialo en Cuenta).'}
+      </p>
+      {link ? (
+        <>
+          <div className="panel__share">
+            <input className="input" readOnly value={link} aria-label="Link del viaje" onFocus={(e) => e.target.select()} />
+            <button
+              type="button"
+              className="btn btn--primary"
+              onClick={() => navigator.clipboard.writeText(link).then(() => {
+                setCopied(true)
+                setTimeout(() => setCopied(false), 2000)
+              })}
+            >
+              {copied ? 'Copiado' : 'Copiar'}
+            </button>
+          </div>
+          <button type="button" className="link-btn" disabled={busy} onClick={() => run(() => disableTripShare(uid, summary.trip.id, profile))}>
+            Dejar de compartir
+          </button>
+        </>
+      ) : (
+        <button type="button" className="btn" disabled={busy} onClick={() => run(() => enableTripShare(uid, summary.trip, entries, profile))}>
+          {busy ? 'Creando…' : 'Crear link del viaje'}
+        </button>
+      )}
+      {error && <p className="field-error" role="alert">{error}</p>}
+    </section>
   )
 }

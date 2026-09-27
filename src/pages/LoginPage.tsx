@@ -1,4 +1,4 @@
-import { createUserWithEmailAndPassword, sendPasswordResetEmail, signInWithEmailAndPassword } from 'firebase/auth'
+import { createUserWithEmailAndPassword, sendEmailVerification, sendPasswordResetEmail, signInWithEmailAndPassword } from 'firebase/auth'
 import { useState } from 'react'
 import { authErrorMessage } from '../lib/auth'
 import { auth, usingEmulators } from '../lib/firebase'
@@ -25,7 +25,8 @@ export function LoginPage() {
         await sendPasswordResetEmail(auth, email)
         setInfo('Te enviamos un correo para restablecer la contraseña. Revisa también la carpeta de spam.')
       } else if (mode === 'signup') {
-        await createUserWithEmailAndPassword(auth, email, password)
+        const cred = await createUserWithEmailAndPassword(auth, email, password)
+        void sendEmailVerification(cred.user).catch(() => undefined)
       } else {
         await signInWithEmailAndPassword(auth, email, password)
       }
@@ -86,6 +87,9 @@ export function LoginPage() {
           {mode === 'reset' && (
             <button type="button" className="link-btn" onClick={() => setMode('signin')}>Volver a entrar</button>
           )}
+          <p className="mono muted login__env">
+            <a href="/privacidad">Privacidad</a>
+          </p>
           {usingEmulators && <p className="mono muted login__env">Modo local · emuladores de Firebase</p>}
         </form>
       </section>

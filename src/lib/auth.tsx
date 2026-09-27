@@ -29,6 +29,8 @@ export function authErrorMessage(err: unknown): string {
     'auth/weak-password': 'La contraseña es muy corta. Usa al menos 6 caracteres.',
     'auth/too-many-requests': 'Demasiados intentos. Espera unos minutos y vuelve a intentar.',
     'auth/network-request-failed': 'Sin conexión. Revisa tu red e inténtalo otra vez.',
+    'auth/requires-recent-login': 'Por seguridad, vuelve a escribir tu contraseña actual.',
+    'auth/missing-password': 'Falta la contraseña. Escríbela para continuar.',
   }
   return messages[code] ?? 'Algo salió mal. Inténtalo de nuevo.'
 }

@@ -7,7 +7,8 @@ import './Shell.css'
 
 /** shareName definido = vista compartida de solo lectura. */
 export function Shell({ shareName }: { shareName?: string }) {
-  const { basePath, geo, entries, loading } = useAppData()
+  const { basePath, geo, entries, loading, trips, sharedTripId } = useAppData()
+  const sharedTrip = sharedTripId ? trips.find((t) => t.id === sharedTripId) : null
   const achievements = useAchievements(geo, entries)
   const home = basePath || '/'
   const shared = shareName !== undefined
@@ -29,7 +30,12 @@ export function Shell({ shareName }: { shareName?: string }) {
       </header>
       {shared && (
         <div className="shell__readonly label">
-          {shareName ? `Mapa de ${shareName}` : 'Mapa compartido'} · solo lectura
+          {sharedTrip
+            ? `Viaje «${sharedTrip.name}»${shareName ? ` de ${shareName}` : ''}`
+            : shareName
+              ? `Mapa de ${shareName}`
+              : 'Mapa compartido'}{' '}
+          · solo lectura
         </div>
       )}
       <main className="shell__main">

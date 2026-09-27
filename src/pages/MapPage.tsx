@@ -21,7 +21,7 @@ import './MapPage.css'
 const zoomFor = (p: Place) => (p.type === 'country' ? 4 : p.type === 'region' ? 5.5 : 7)
 
 export function MapPage() {
-  const { geo, entries, trips, summaries, uid, readOnly, basePath } = useAppData()
+  const { geo, entries, trips, summaries, uid, readOnly, basePath, sharedTripId } = useAppData()
   const [params, setParams] = useSearchParams()
   const [focus, setFocus] = useState<{ lon: number; lat: number; zoom: number } | null>(null)
   const [pickCountry, setPickCountry] = useState<string | null>(null)
@@ -32,7 +32,8 @@ export function MapPage() {
   const param = params.get('p')
   const gazetteer = useGazetteer()
   const current = placeFromParam(geo, entries, param, gazetteer)
-  const tripId = params.get('viaje')
+  // En un link de viaje, ese viaje queda abierto por defecto.
+  const tripId = params.get('viaje') ?? sharedTripId
   const tripSummary = useMemo(() => {
     const trip = trips.find((t) => t.id === tripId)
     return trip ? summarizeTrip(geo, trip, entries) : null

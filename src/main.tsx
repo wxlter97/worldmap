@@ -6,13 +6,14 @@ import './styles/base.css'
 import { AppDataProvider } from './app/AppData'
 import { Shell } from './app/Shell'
 import { AuthProvider, useAuth } from './lib/auth'
-import { ensureProfile, resolveShare } from './lib/data'
+import { ensureProfile, resolveShare, type ShareInfo } from './lib/data'
 import { firebaseConfigured } from './lib/firebase'
 import { AccountPage } from './pages/AccountPage'
 import { ExportPage } from './pages/ExportPage'
 import { ListPage } from './pages/ListPage'
 import { LoginPage } from './pages/LoginPage'
 import { MapPage } from './pages/MapPage'
+import { PrivacyPage } from './pages/PrivacyPage'
 import { StatsPage } from './pages/StatsPage'
 import { TripsPage } from './pages/TripsPage'
 
@@ -49,7 +50,7 @@ function PrivateApp() {
 
 function SharedApp() {
   const { token = '' } = useParams()
-  const [share, setShare] = useState<{ uid: string; displayName: string } | null | undefined>(undefined)
+  const [share, setShare] = useState<ShareInfo | null | undefined>(undefined)
   useEffect(() => {
     resolveShare(token).then(setShare, () => setShare(null))
   }, [token])
@@ -63,7 +64,7 @@ function SharedApp() {
     )
   }
   return (
-    <AppDataProvider uid={share.uid} readOnly basePath={`/s/${token}`}>
+    <AppDataProvider uid={share.uid} readOnly basePath={`/s/${token}`} tripId={share.tripId ?? null}>
       <DataRoutes shareName={share.displayName} />
     </AppDataProvider>
   )
@@ -79,6 +80,7 @@ function App() {
   }
   return (
     <Routes>
+      <Route path="/privacidad" element={<PrivacyPage />} />
       <Route path="/s/:token/*" element={<SharedApp />} />
       <Route path="/*" element={<PrivateApp />} />
     </Routes>

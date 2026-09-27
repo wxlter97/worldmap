@@ -1,24 +1,36 @@
 // Lectura/escritura de entradas y viajes en Firestore.
 import {
+  arrayRemove,
+  arrayUnion,
   collection,
-  deleteDoc,
   deleteField,
   doc,
   getDoc,
   onSnapshot,
+  query,
   serverTimestamp,
   setDoc,
+  where,
   writeBatch,
+  type WriteBatch,
 } from 'firebase/firestore'
 import { deleteObject, getDownloadURL, ref, uploadBytes } from 'firebase/storage'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { db, storage } from './firebase'
 import type { Entry, Trip } from './model'
 
 const entriesCol = (uid: string) => collection(db, 'users', uid, 'entries')
+const notesCol = (uid: string) => collection(db, 'users', uid, 'notes')
 const tripsCol = (uid: string) => collection(db, 'users', uid, 'trips')
 // "city:123" es un id de documento válido; se codifica por si algún id trae "/".
-const docId = (key: string) => encodeURIComponent(key)
+export const docId = (key: string) => encodeURIComponent(key)
+
+// Descripción y personas viven aparte (users/{uid}/notes/{key}): las reglas las ocultan en los links
+// compartidos salvo que el dueño active «Mostrar notas».
+interface Note {
+  description: string
+  people: string
+}
 
 export interface UserData {
   entries: Entry[]
@@ -27,9 +39,15 @@ export interface UserData {
   error: string | null
 }
 
-/** Suscripción en vivo a las entradas y viajes de un usuario (propio o compartido). */
-export function useUserData(uid: string | null): UserData {
+/**
+ * Suscripción en vivo a las entradas y viajes de un usuario.
+ * - Dueño o link del mapa completo: todas las entradas; las notas si las reglas lo permiten.
+ * - Link de un viaje (`tripId`): solo las entradas y el viaje compartido.
+ */
+export function useUserData(uid: string | null, tripId: string | null = null): UserData {
   const [state, setState] = useState<UserData>({ entries: [], trips: [], loading: true, error: null })
+  const [rawEntries, setRawEntries] = useState<Entry[]>([])
+  const [notes, setNotes] = useState<Map<string, Note>>(new Map())
 
   useEffect(() => {
     if (!uid) {
@@ -37,33 +55,93 @@ export function useUserData(uid: string | null): UserData {
       return
     }
     const onError = (e: Error) => setState((s) => ({ ...s, loading: false, error: e.message }))
+    const entriesQuery = tripId ? query(entriesCol(uid), where('tripIds', 'array-contains', tripId)) : entriesCol(uid)
     const unsubEntries = onSnapshot(
-      entriesCol(uid),
-      (snap) => setState((s) => ({ ...s, entries: snap.docs.map((d) => d.data() as Entry), loading: false })),
+      entriesQuery,
+      (snap) => {
+        setRawEntries(snap.docs.map((d) => d.data() as Entry))
+        setState((s) => ({ ...s, loading: false }))
+      },
       onError,
     )
-    const unsubTrips = onSnapshot(
-      tripsCol(uid),
-      (snap) => setState((s) => ({ ...s, trips: snap.docs.map((d) => ({ ...(d.data() as Trip), id: d.id })) })),
-      onError,
-    )
+    const unsubTrips = tripId
+      ? onSnapshot(
+          doc(tripsCol(uid), tripId),
+          (d) => setState((s) => ({ ...s, trips: d.exists() ? [{ ...(d.data() as Trip), id: d.id }] : [] })),
+          onError,
+        )
+      : onSnapshot(tripsCol(uid), (snap) => setState((s) => ({ ...s, trips: snap.docs.map((d) => ({ ...(d.data() as Trip), id: d.id })) })), onError)
+    // Notas: si las reglas no las permiten (link sin «Mostrar notas»), simplemente no llegan.
+    const unsubNotes = tripId
+      ? () => undefined
+      : onSnapshot(
+          notesCol(uid),
+          (snap) => setNotes(new Map(snap.docs.map((d) => [decodeURIComponent(d.id), d.data() as Note]))),
+          () => setNotes(new Map()),
+        )
     return () => {
       unsubEntries()
       unsubTrips()
+      unsubNotes()
     }
-  }, [uid])
+  }, [uid, tripId])
 
-  return state
+  // Link de un viaje: las notas se piden una a una (las reglas comprueban que la entrada sea del viaje).
+  const keysSig = tripId ? rawEntries.map((e) => e.key).sort().join('|') : ''
+  useEffect(() => {
+    if (!uid || !tripId || !keysSig) return
+    let cancelled = false
+    Promise.all(
+      keysSig.split('|').map((key) =>
+        getDoc(doc(notesCol(uid), docId(key))).then((d) => (d.exists() ? ([key, d.data() as Note] as const) : null), () => null),
+      ),
+    ).then((pairs) => !cancelled && setNotes(new Map(pairs.filter((p) => p !== null))))
+    return () => {
+      cancelled = true
+    }
+  }, [uid, tripId, keysSig])
+
+  const entries = useMemo(
+    () =>
+      rawEntries.map((e) => {
+        const n = notes.get(e.key)
+        // Entradas antiguas guardaban la descripción en el propio documento.
+        return { ...e, description: n?.description ?? e.description ?? '', people: n?.people ?? e.people ?? '' }
+      }),
+    [rawEntries, notes],
+  )
+
+  return useMemo(() => ({ ...state, entries }), [state, entries])
+}
+
+/** Documento de entrada sin campos privados y con `tripIds` derivado de las fechas. */
+function entryDoc(entry: Entry) {
+  const { description: _d, people: _p, ...rest } = entry
+  const tripIds = [...new Set(entry.dates.map((d) => d.tripId).filter((t): t is string => !!t))]
+  return { ...rest, tripIds, updatedAt: Date.now() }
+}
+
+/** Añade al lote la escritura de la entrada y de sus notas (o su borrado si quedan vacías). */
+export function writeEntry(batch: WriteBatch, uid: string, entry: Entry) {
+  batch.set(doc(entriesCol(uid), docId(entry.key)), entryDoc(entry))
+  const noteRef = doc(notesCol(uid), docId(entry.key))
+  if (entry.description || entry.people) batch.set(noteRef, { description: entry.description ?? '', people: entry.people ?? '' })
+  else batch.delete(noteRef)
 }
 
 // Las escrituras no se esperan: con la caché offline se aplican localmente al instante
 // y se sincronizan cuando hay conexión.
 export function saveEntry(uid: string, entry: Entry) {
-  return setDoc(doc(entriesCol(uid), docId(entry.key)), { ...entry, updatedAt: Date.now() })
+  const batch = writeBatch(db)
+  writeEntry(batch, uid, entry)
+  return batch.commit()
 }
 
 export function deleteEntry(uid: string, key: string) {
-  return deleteDoc(doc(entriesCol(uid), docId(key)))
+  const batch = writeBatch(db)
+  batch.delete(doc(entriesCol(uid), docId(key)))
+  batch.delete(doc(notesCol(uid), docId(key)))
+  return batch.commit()
 }
 
 export function saveTrip(uid: string, trip: Trip) {
@@ -75,10 +153,10 @@ export function deleteTrip(uid: string, id: string, entries: Entry[]) {
   const batch = writeBatch(db)
   for (const e of entries) {
     if (!e.dates.some((d) => d.tripId === id)) continue
-    const dates = e.dates.map((d) => (d.tripId === id ? { ...d, tripId: null } : d))
-    batch.set(doc(entriesCol(uid), docId(e.key)), { ...e, dates, updatedAt: Date.now() })
+    writeEntry(batch, uid, { ...e, dates: e.dates.map((d) => (d.tripId === id ? { ...d, tripId: null } : d)) })
   }
   batch.delete(doc(tripsCol(uid), id))
+  batch.set(doc(db, 'users', uid), { sharedTrips: arrayRemove(id), tripShares: { [id]: deleteField() } }, { merge: true })
   return batch.commit()
 }
 
@@ -92,10 +170,12 @@ export function newTrip(name: string): Trip {
 
 export interface Profile {
   displayName: string
-  sharing: { enabled: boolean; token: string | null }
+  sharing: { enabled: boolean; token: string | null; showNotes?: boolean }
+  sharedTrips?: string[] // ids de viajes con link propio (las reglas los leen)
+  tripShares?: Record<string, string> // tripId → token
 }
 
-const DEFAULT_PROFILE: Profile = { displayName: '', sharing: { enabled: false, token: null } }
+const DEFAULT_PROFILE: Profile = { displayName: '', sharing: { enabled: false, token: null, showNotes: false } }
 
 export async function ensureProfile(uid: string) {
   const ref = doc(db, 'users', uid)
@@ -120,6 +200,7 @@ export function saveDisplayName(uid: string, displayName: string, current: Profi
   const batch = writeBatch(db)
   batch.set(doc(db, 'users', uid), { displayName }, { merge: true })
   if (current.sharing.enabled && current.sharing.token) batch.set(doc(db, 'shares', current.sharing.token), { displayName }, { merge: true })
+  for (const token of Object.values(current.tripShares ?? {})) batch.set(doc(db, 'shares', token), { displayName }, { merge: true })
   return batch.commit()
 }
 
@@ -135,7 +216,7 @@ export async function enableSharing(uid: string, current: Profile) {
   if (current.sharing.token) batch.delete(doc(db, 'shares', current.sharing.token))
   batch.set(doc(db, 'shares', token), { uid, displayName: current.displayName, createdAt: serverTimestamp() })
   // email: perfiles creados antes de v0.2 lo guardaban; se elimina antes de hacerlo público.
-  batch.set(doc(db, 'users', uid), { sharing: { enabled: true, token }, email: deleteField() }, { merge: true })
+  batch.set(doc(db, 'users', uid), { sharing: { enabled: true, token, showNotes: current.sharing.showNotes ?? false }, email: deleteField() }, { merge: true })
   await batch.commit()
   return token
 }
@@ -143,14 +224,46 @@ export async function enableSharing(uid: string, current: Profile) {
 export async function disableSharing(uid: string, current: Profile) {
   const batch = writeBatch(db)
   if (current.sharing.token) batch.delete(doc(db, 'shares', current.sharing.token))
-  batch.set(doc(db, 'users', uid), { sharing: { enabled: false, token: null } }, { merge: true })
+  batch.set(doc(db, 'users', uid), { sharing: { enabled: false, token: null, showNotes: current.sharing.showNotes ?? false } }, { merge: true })
+  await batch.commit()
+}
+
+/** Mostrar u ocultar descripciones y personas en todos los links (mapa y viajes). */
+export function setShowNotes(uid: string, showNotes: boolean) {
+  return setDoc(doc(db, 'users', uid), { sharing: { showNotes } }, { merge: true })
+}
+
+/** Link de solo lectura de un viaje. Reescribe las entradas del viaje para asegurar su `tripIds`. */
+export async function enableTripShare(uid: string, trip: Trip, entries: Entry[], current: Profile) {
+  const token = randomToken()
+  const batch = writeBatch(db)
+  const old = current.tripShares?.[trip.id]
+  if (old) batch.delete(doc(db, 'shares', old))
+  batch.set(doc(db, 'shares', token), { uid, tripId: trip.id, displayName: current.displayName, createdAt: serverTimestamp() })
+  batch.set(doc(db, 'users', uid), { sharedTrips: arrayUnion(trip.id), tripShares: { [trip.id]: token }, email: deleteField() }, { merge: true })
+  for (const e of entries) if (e.dates.some((d) => d.tripId === trip.id)) writeEntry(batch, uid, e)
+  await batch.commit()
+  return token
+}
+
+export async function disableTripShare(uid: string, tripId: string, current: Profile) {
+  const batch = writeBatch(db)
+  const token = current.tripShares?.[tripId]
+  if (token) batch.delete(doc(db, 'shares', token))
+  batch.set(doc(db, 'users', uid), { sharedTrips: arrayRemove(tripId), tripShares: { [tripId]: deleteField() } }, { merge: true })
   await batch.commit()
 }
 
 /** Resuelve un token de link compartido al uid del dueño. */
-export async function resolveShare(token: string): Promise<{ uid: string; displayName: string } | null> {
+export interface ShareInfo {
+  uid: string
+  displayName: string
+  tripId?: string
+}
+
+export async function resolveShare(token: string): Promise<ShareInfo | null> {
   const snap = await getDoc(doc(db, 'shares', token))
-  return snap.exists() ? (snap.data() as { uid: string; displayName: string }) : null
+  return snap.exists() ? (snap.data() as ShareInfo) : null
 }
 
 // --- Fotos ---

@@ -75,3 +75,53 @@
 .account-link-btn {
   align-self: flex-start;
 }
+
+.account-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  max-width: 420px;
+}
+
+.account-danger {
+  border: 2px solid var(--danger);
+  border-left-width: 10px;
+  padding: var(--sp-4);
+  background: var(--white);
+}
+
+.account-danger h2 {
+  color: var(--danger);
+}
+
+.account-toggle {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-3);
+  max-width: 62ch;
+  cursor: pointer;
+}
+
+.account-toggle .toggle {
+  flex-shrink: 0;
+}
+
+.account-trips {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.account-trips li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  align-items: baseline;
+}
+
+.account-trips .mono {
+  font-size: 11px;
+}

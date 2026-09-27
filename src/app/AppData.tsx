@@ -7,6 +7,7 @@ interface AppData extends UserData {
   uid: string // dueño de los datos mostrados
   readOnly: boolean
   basePath: string // '' para el dueño, '/s/{token}' en un link compartido
+  sharedTripId: string | null // link de un solo viaje
   profile: Profile
   geo: Geo
   summaries: Map<string, CountrySummary>
@@ -33,16 +34,17 @@ interface ProviderProps {
   uid: string
   readOnly: boolean
   basePath: string
+  tripId?: string | null
   children: ReactNode
 }
 
-export function AppDataProvider({ uid, readOnly, basePath, children }: ProviderProps) {
+export function AppDataProvider({ uid, readOnly, basePath, tripId = null, children }: ProviderProps) {
   const { geo, error: geoError } = useGeo()
-  const data = useUserData(uid)
+  const data = useUserData(uid, tripId)
   const profile = useProfile(uid)
   const summaries = useMemo(() => (geo ? summarizeCountries(geo, data.entries) : new Map()), [geo, data.entries])
 
   if (geoError) return <div className="screen-msg notice notice--error">No se pudieron cargar los mapas: {geoError}. Recarga la página.</div>
   if (!geo) return <div className="screen-msg mono">Cargando mapa…</div>
-  return <Ctx.Provider value={{ ...data, uid, readOnly, basePath, profile, geo, summaries }}>{children}</Ctx.Provider>
+  return <Ctx.Provider value={{ ...data, uid, readOnly, basePath, sharedTripId: tripId, profile, geo, summaries }}>{children}</Ctx.Provider>
 }

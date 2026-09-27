@@ -1,6 +1,4 @@
 // Exportación (CSV, JSON) e importación de copias de seguridad.
-import { writeBatch, doc, collection } from 'firebase/firestore'
-import { db } from './firebase'
 import { CONTINENTS, type Geo } from './geo'
 import { PLACE_TYPE_LABEL, STATUSES, STATUS_LABEL, rangeDays, type Entry, type PlaceType, type Trip } from './model'
 
@@ -90,25 +88,29 @@ export function parseBackup(text: string): { backup: Backup } | { error: string 
 
 /** Escribe la copia en Firestore (sobrescribe entradas y viajes con la misma clave), en lotes de 400. */
 export async function restoreBackup(uid: string, backup: Backup) {
+  // Firebase se carga aquí para que el resto del módulo (CSV, validación) no dependa de él.
+  const [{ writeBatch, doc, collection }, { writeEntry }, { db }] = await Promise.all([
+    import('firebase/firestore'),
+    import('./data'),
+    import('./firebase'),
+  ])
   // Valores por defecto para copias de versiones anteriores a las que les falte algún campo.
   const tripDefaults: Partial<Trip> = { description: '', createdAt: Date.now() }
   const entryDefaults: Partial<Entry> = {
     tags: [], description: '', rating: null, people: '', photoPath: null, percentOverride: null,
     priority: null, regionId: null, lon: null, lat: null, createdAt: Date.now(),
   }
-  const writes: [ReturnType<typeof doc>, object][] = [
-    ...backup.trips.map((t): [ReturnType<typeof doc>, object] => [
-      doc(collection(db, 'users', uid, 'trips'), t.id),
-      { ...tripDefaults, ...t, updatedAt: Date.now() },
-    ]),
-    ...backup.entries.map((e): [ReturnType<typeof doc>, object] => [
-      doc(collection(db, 'users', uid, 'entries'), encodeURIComponent(e.key)),
-      { ...entryDefaults, ...e, updatedAt: Date.now() },
-    ]),
-  ]
-  for (let i = 0; i < writes.length; i += 400) {
+  const trips = backup.trips.map((t) => ({ ...tripDefaults, ...t, updatedAt: Date.now() }) as Trip)
+  const entries = backup.entries.map((e) => ({ ...entryDefaults, ...e }) as Entry)
+  // Cada entrada son 2 escrituras (entrada + notas): lotes de 200 para no pasar el límite de 500.
+  for (let i = 0; i < trips.length; i += 400) {
     const batch = writeBatch(db)
-    for (const [ref, data] of writes.slice(i, i + 400)) batch.set(ref, data)
+    for (const t of trips.slice(i, i + 400)) batch.set(doc(collection(db, 'users', uid, 'trips'), t.id), t)
+    await batch.commit()
+  }
+  for (let i = 0; i < entries.length; i += 200) {
+    const batch = writeBatch(db)
+    for (const e of entries.slice(i, i + 200)) writeEntry(batch, uid, e)
     await batch.commit()
   }
 }
