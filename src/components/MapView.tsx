@@ -6,7 +6,7 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Feature, FeatureCollection, MultiPolygon, Point, Polygon } from 'geojson'
-import { loadAdmin1, type Geo } from '../lib/geo'
+import { loadAdmin1, type BBox, type Geo } from '../lib/geo'
 import { readPref, writePref } from '../lib/prefs'
 import { useTheme, type Theme } from '../lib/theme'
 import { BEEN_STATUSES, STATUS_LABEL, type CountrySummary, type Entry } from '../lib/model'
@@ -22,7 +22,9 @@ interface Props {
   entries: Entry[]
   summaries: Map<string, CountrySummary>
   selectedCountry: string | null
-  focus: { lon: number; lat: number; zoom: number } | null
+  /** Región del lugar abierto (la de una ciudad incluida): es lo que se marca, se resalta su borde. */
+  selectedRegion?: string | null
+  focus: MapFocus | null
   onSelect: (s: MapSelection) => void
   /** Modo "marcar lugar propio": el siguiente clic devuelve la coordenada. */
   picking?: boolean
@@ -32,6 +34,9 @@ interface Props {
   /** Repetición en curso: oculta la leyenda y deja sitio a la barra de reproducción. */
   replaying?: boolean
 }
+
+/** Hacia dónde mover la cámara: un encuadre (se ve entero) o un punto con zoom. */
+export type MapFocus = { bounds: BBox; maxZoom: number } | { center: [number, number]; zoom: number }
 
 export interface MapLines {
   arcs: [number, number][][]
@@ -106,12 +111,14 @@ function makePattern(kind: PatternKind, P: MapPalette): ImageData {
   return ctx.getImageData(0, 0, size, size)
 }
 
-export function MapView({ geo, entries, summaries, selectedCountry, focus, onSelect, picking = false, onPickLocation, lines = null, replaying = false }: Props) {
+export function MapView({ geo, entries, summaries, selectedCountry, selectedRegion = null, focus, onSelect, picking = false, onPickLocation, lines = null, replaying = false }: Props) {
   const container = useRef<HTMLDivElement>(null)
   const mapRef = useRef<maplibregl.Map | null>(null)
   const [ready, setReady] = useState(false)
   const [globe, setGlobe] = useState(false)
   const [scratch, setScratch] = useState(() => readPref('scratch'))
+  // Nivel de detalle: por regiones (se ve lo que falta de cada país) o país entero pintado.
+  const [byCountry, setByCountry] = useState(() => readPref('countryLevel'))
   const theme = useTheme()
   const themeRef = useRef(theme)
   themeRef.current = theme
@@ -212,6 +219,13 @@ export function MapView({ geo, entries, summaries, selectedCountry, focus, onSel
         filter: ['==', ['get', 'id'], ''],
         paint: { 'line-color': C.ink, 'line-width': 3 },
       })
+      map.addLayer({
+        id: 'region-selected',
+        type: 'line',
+        source: 'regions',
+        filter: ['==', ['get', 'id'], ''],
+        paint: { 'line-color': C.ink, 'line-width': 2.5, 'line-dasharray': [2, 1] },
+      })
       // Borde ink bajo la línea: solo en modo raspar, donde la línea es amarilla.
       map.addLayer({
         id: 'route-casing',
@@ -303,19 +317,19 @@ export function MapView({ geo, entries, summaries, selectedCountry, focus, onSel
     if (!ready) return
     const features = geo.shapes.features.map((f) => {
       const s = summaries.get(f.properties.id)
-      const partial = !!s && s.status != null && BEEN_STATUSES.has(s.status) && !s.percentIsManual && s.visitedRegionIds.size > 0 && s.percent < 99.5
+      const partial = !byCountry && regionDetail(geo, s) && s!.percent < 99.5
       return { ...f, properties: { id: f.properties.id, status: s?.status ?? null, partial } }
     })
     ;(mapRef.current!.getSource('countries') as GeoJSONSource).setData({ type: 'FeatureCollection', features })
-  }, [ready, geo, summaries])
+  }, [ready, geo, summaries, byCountry])
 
-  // --- Regiones visitadas (+ todas las del país seleccionado) ---
+  // --- Regiones de los países visitados (+ todas las del país seleccionado) ---
   const regionCountries = useMemo(() => {
     const ids = new Set<string>()
-    for (const [id, s] of summaries) if (s.visitedRegionIds.size > 0 && !s.percentIsManual) ids.add(id)
+    if (!byCountry) for (const [id, s] of summaries) if (regionDetail(geo, s)) ids.add(id)
     if (selectedCountry) ids.add(selectedCountry)
     return [...ids].sort()
-  }, [summaries, selectedCountry])
+  }, [geo, summaries, selectedCountry, byCountry])
 
   useEffect(() => {
     if (!ready) return
@@ -326,8 +340,9 @@ export function MapView({ geo, entries, summaries, selectedCountry, focus, onSel
       for (const fc of collections) {
         if (!fc) continue
         for (const f of fc.features) {
-          const visited = summaries.get(f.properties.country)?.visitedRegionIds.has(f.properties.id) ?? false
-          if (visited || f.properties.country === selectedCountry) features.push({ ...f, properties: { id: f.properties.id, visited } })
+          const visited = !byCountry && (summaries.get(f.properties.country)?.visitedRegionIds.has(f.properties.id) ?? false)
+          // Con detalle por regiones se dibujan todas las de un país visitado: así se ve lo que falta.
+          if (!byCountry || f.properties.country === selectedCountry) features.push({ ...f, properties: { id: f.properties.id, visited } })
         }
       }
       ;(mapRef.current!.getSource('regions') as GeoJSONSource).setData({ type: 'FeatureCollection', features })
@@ -335,7 +350,7 @@ export function MapView({ geo, entries, summaries, selectedCountry, focus, onSel
     return () => {
       cancelled = true
     }
-  }, [ready, regionCountries, summaries, selectedCountry])
+  }, [ready, regionCountries, summaries, selectedCountry, byCountry])
 
   // --- Puntos (ciudades, lugares, lugares propios) ---
   useEffect(() => {
@@ -353,10 +368,14 @@ export function MapView({ geo, entries, summaries, selectedCountry, focus, onSel
   useEffect(() => {
     if (!ready) return
     mapRef.current!.setFilter('country-selected', ['==', ['get', 'id'], selectedCountry ?? ''])
-  }, [ready, selectedCountry])
+    mapRef.current!.setFilter('region-selected', ['==', ['get', 'id'], selectedRegion ?? ''])
+  }, [ready, selectedCountry, selectedRegion])
 
   useEffect(() => {
-    if (ready && focus) mapRef.current!.flyTo({ center: [focus.lon, focus.lat], zoom: focus.zoom, duration: 900 })
+    if (!ready || !focus) return
+    const map = mapRef.current!
+    if ('bounds' in focus) map.fitBounds(focus.bounds, { padding: overlayPadding(map), maxZoom: focus.maxZoom, duration: 900 })
+    else map.flyTo({ center: focus.center, zoom: focus.zoom, duration: 900 })
   }, [ready, focus])
 
   // --- Líneas de viaje ---
@@ -420,6 +439,7 @@ export function MapView({ geo, entries, summaries, selectedCountry, focus, onSel
     map.setPaintProperty('country-line', 'line-color', scratch ? ['case', beenExpr, C.ink, P.foilBorder] : P.line)
     map.setPaintProperty('region-line', 'line-color', scratch ? ['case', ['==', ['get', 'visited'], true], C.ink, P.foilBorder] : P.line)
     map.setPaintProperty('country-selected', 'line-color', P.fg)
+    map.setPaintProperty('region-selected', 'line-color', scratch ? C.faro : P.fg)
     map.setPaintProperty('route-line', 'line-color', scratch ? C.faro : P.fg)
     map.setLayoutProperty('route-casing', 'visibility', scratch ? 'visible' : 'none')
     map.setPaintProperty('points', 'circle-color', ['match', ['get', 'status'], 'lived', P.lived, 'visited', C.faro, P.land])
@@ -458,12 +478,44 @@ export function MapView({ geo, entries, summaries, selectedCountry, focus, onSel
         <button type="button" className="btn btn--small" aria-pressed={scratch} onClick={() => setScratch((v) => !v)}>
           {scratch ? t('Normal') : t('Raspar')}
         </button>
+        <button
+          type="button"
+          className="btn btn--small"
+          title={byCountry ? t('Ver el detalle por regiones') : t('Pintar cada país entero')}
+          onClick={() => {
+            writePref('countryLevel', !byCountry)
+            setByCountry((v) => !v)
+          }}
+        >
+          {byCountry ? t('Regiones') : t('Países')}
+        </button>
         <button type="button" className="btn btn--small" onClick={() => setGlobe((g) => !g)}>
           {globe ? t('Plano') : t('Globo')}
         </button>
       </div>
     </div>
   )
+}
+
+/** Margen del encuadre: deja libre lo que tapan la leyenda y los botones (en móvil ocupan buena parte del mapa). */
+function overlayPadding(map: maplibregl.Map): maplibregl.PaddingOptions {
+  const box = map.getContainer().getBoundingClientRect()
+  const pad = Math.min(40, Math.round(Math.min(box.width, box.height) / 8))
+  const p = { top: pad, right: pad, bottom: pad, left: pad }
+  const legend = map.getContainer().parentElement?.querySelector<HTMLElement>('.map-legend:not([hidden])')?.getBoundingClientRect()
+  const modes = map.getContainer().parentElement?.querySelector<HTMLElement>('.map-modes')?.getBoundingClientRect()
+  if (modes) p.right = Math.max(p.right, box.right - modes.left + 8)
+  // Una leyenda ancha (móvil) cubre la franja de arriba.
+  if (legend && legend.width > box.width / 2) p.top = Math.max(p.top, legend.bottom - box.top + 8)
+  // Nunca más margen que mapa.
+  if (p.left + p.right > box.width * 0.6) p.right = p.left = Math.round(box.width * 0.1)
+  if (p.top + p.bottom > box.height * 0.6) p.top = p.bottom = Math.round(box.height * 0.1)
+  return p
+}
+
+/** País visitado cuyo % sale de sus regiones (no manual, con regiones en los datos). */
+function regionDetail(geo: Geo, s: CountrySummary | undefined): boolean {
+  return !!s && s.status != null && BEEN_STATUSES.has(s.status) && !s.percentIsManual && (geo.regionAreaByCountry[s.country.id] ?? 0) > 0
 }
 
 function emptyFc(): FeatureCollection {

@@ -2,14 +2,14 @@ import booleanPointInPolygon from '@turf/boolean-point-in-polygon'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useAppData } from '../app/AppData'
-import { MapView, type MapLines, type MapSelection } from '../components/MapView'
+import { MapView, type MapFocus, type MapLines, type MapSelection } from '../components/MapView'
 import { ReplayBar, type ReplayState } from '../components/ReplayBar'
 import { PlacePanel, countryPlace, entryPlace, regionPlace } from '../components/PlacePanel'
 import { QuickMarkPanel, toggleCountry } from '../components/QuickMark'
 import { SearchBox } from '../components/SearchBox'
 import { TripPanel } from '../components/TripPanel'
 import { StatCard, formatPercent } from '../components/ui'
-import { loadAdmin1, type Geo } from '../lib/geo'
+import { countryBBox, loadAdmin1, regionBBox, type Geo } from '../lib/geo'
 import { readPref, writePref } from '../lib/prefs'
 import { buildJourney, journeyArcs } from '../lib/journey'
 import { BEEN_STATUSES, summarizeCountries, type Entry, type Status } from '../lib/model'
@@ -19,12 +19,26 @@ import { summarizeTrip } from '../lib/trips'
 import { t } from '../lib/i18n'
 import './MapPage.css'
 
-const zoomFor = (p: Place) => (p.type === 'country' ? 4 : p.type === 'region' ? 5.5 : 7)
+/**
+ * Encuadre al abrir un lugar: se ve entero lo que se marca. Una ciudad o un lugar encuadran su región
+ * (marcar San Antonio marca Texas), una región se ve completa y un país, con sus islas cercanas.
+ */
+async function focusFor(geo: Geo, p: Place): Promise<MapFocus | null> {
+  const point: [number, number] | null = p.lon != null && p.lat != null ? [p.lon, p.lat] : null
+  let box = p.regionId ? await regionBBox(p.countryId, p.regionId) : null
+  // Sin región (microestados, lugares sin región): el país.
+  box ??= p.type === 'country' || !p.regionId ? countryBBox(geo, p.countryId) : null
+  if (box) {
+    if (point) box = [Math.min(box[0], point[0]), Math.min(box[1], point[1]), Math.max(box[2], point[0]), Math.max(box[3], point[1])]
+    return { bounds: box, maxZoom: p.type === 'country' ? 6 : 7 }
+  }
+  return point ? { center: point, zoom: 5 } : null
+}
 
 export function MapPage() {
   const { geo, entries, trips, summaries, uid, readOnly, basePath, sharedTripId } = useAppData()
   const [params, setParams] = useSearchParams()
-  const [focus, setFocus] = useState<{ lon: number; lat: number; zoom: number } | null>(null)
+  const [focus, setFocus] = useState<MapFocus | null>(null)
   const [pickCountry, setPickCountry] = useState<string | null>(null)
   const [pending, setPending] = useState<{ lon: number; lat: number; countryId: string } | null>(null)
   const [pendingName, setPendingName] = useState('')
@@ -112,9 +126,13 @@ export function MapPage() {
       skipFly.current = false
       return
     }
-    const lon = current.lon ?? (current.regionId ? null : geo.countries[current.countryId]?.center[0])
-    const lat = current.lat ?? (current.regionId ? null : geo.countries[current.countryId]?.center[1])
-    if (lon != null && lat != null) setFocus({ lon, lat, zoom: zoomFor(current) })
+    let cancelled = false
+    void focusFor(geo, current).then((f) => {
+      if (!cancelled && f) setFocus(f)
+    })
+    return () => {
+      cancelled = true
+    }
     // Solo al cambiar el lugar abierto (o cuando termina de resolverse desde el nomenclátor).
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [param, current == null])
@@ -283,6 +301,7 @@ export function MapPage() {
           entries={replayEntries ?? entries}
           summaries={replaySummaries ?? summaries}
           selectedCountry={replay || quick ? null : current?.countryId ?? null}
+          selectedRegion={replay || quick ? null : current?.regionId ?? null}
           focus={focus}
           onSelect={onSelect}
           picking={!!pickCountry}

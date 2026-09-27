@@ -175,6 +175,8 @@ export const EN: Record<string, string> = {
   "Fuera del mapa": "Off the map",
   "Generar link nuevo": "Generate new link",
   "Globo": "Globe",
+  "Ver el detalle por regiones": "Show detail by region",
+  "Pintar cada país entero": "Fill each whole country",
   "Guardando…": "Saving…",
   "Guardar": "Save",
   "Guardar cambios": "Save changes",
